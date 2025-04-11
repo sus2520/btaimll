@@ -1,0 +1,262 @@
+/* App.css */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  overflow: hidden;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 250px;
+  background: linear-gradient(180deg, #1E3A8A, #2B4EAD); /* Dark blue gradient */
+  padding: 20px;
+  border-right: 1px solid #60A5FA;
+  overflow-y: auto;
+  color: #FFFFFF;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.conversations h3 {
+  font-size: 14px;
+  color: #60A5FA;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.conversation-item {
+  padding: 12px 15px;
+  color: #FFFFFF;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.conversation-item:hover {
+  background-color: #3B82F6;
+}
+
+.renew-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #FF6200; /* Orange shade */
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.renew-btn:hover {
+  background-color: #E55B00; /* Darker orange shade on hover */
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.header {
+  padding: 10px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  background-color: #fff;
+}
+
+.version-selector {
+  display: flex;
+  align-items: center;
+}
+
+.version-dropdown {
+  padding: 5px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #202123;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.version-dropdown:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.share-btn {
+  padding: 5px 10px;
+  background-color: transparent; /* Remove box by making background transparent */
+  border: none; /* Remove border */
+  cursor: pointer;
+  margin-right: 10px;
+  font-size: 16px; /* Adjust size to match the ↑ icon */
+  transition: color 0.3s ease;
+}
+
+.share-btn:hover {
+  color: #007bff; /* Slight color change on hover to indicate interactivity */
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-pic {
+  font-size: 24px;
+}
+
+.profile-name {
+  font-size: 16px;
+  color: #202123;
+}
+
+.main-chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.welcome-message {
+  text-align: center;
+  color: #202123;
+  font-size: 24px;
+  font-weight: 500;
+  margin-top: 120px;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  padding: 15px 20px;
+  border-radius: 8px;
+  max-width: 70%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.message.user {
+  background-color: #e9ecef;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.message.bot {
+  background-color: #f1f3f5;
+  align-self: flex-start;
+}
+
+.input-container {
+  display: flex;
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  align-items: center;
+  background-color: #fff;
+}
+
+.input-container input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid #ced4da;
+  border-radius: 20px;
+  outline: none;
+  margin: 0 10px;
+  color: #202123;
+  font-size: 16px;
+}
+
+.input-container input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.attachment-btn,
+.voice-btn {
+  padding: 6px;
+  background-color: #ecebee;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-btn {
+  background-color: #e08026; /* Consistent voice icon color */
+}
+
+.attachment-btn:hover {
+  background-color: #d3d3d3;
+}
+
+.voice-btn:hover {
+  background-color: #0056b3;
+}
+
+.send-btn {
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.send-btn:hover {
+  background-color: #0056b3;
+}
+
+.disclaimer {
+  padding: 10px 20px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff;
+}
