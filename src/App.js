@@ -4,29 +4,99 @@ import './App.css';
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const [profile] = useState({
     name: 'Guest',
-    profilePic: '👤', // Default profile icon
+    profilePic: '👤',
   });
-  const [logoSrc, setLogoSrc] = useState('/logo.png'); // State for logo fallback
+  const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [selectedVersion, setSelectedVersion] = useState('Llama 70b');
+  const [isListening, setIsListening] = useState(false); // Track voice listening state
 
-  const handleSendMessage = (e) => {
+  // Initialize Web Speech API (with prefix for compatibility)
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+  if (recognition) {
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US'; // Set language to English (adjust as needed)
+  }
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === '') return;
 
     setMessages([...messages, { text: input, sender: 'user' }]);
-    setTimeout(() => {
+    setInput('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input }),
+      });
+      const data = await response.json();
+      if (data.report) {
+        setMessages((prev) => [
+          ...prev,
+          { text: data.report, sender: 'bot' },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { text: 'Error: No report generated', sender: 'bot' },
+        ]);
+      }
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { text: `You said: ${input}`, sender: 'bot' },
+        { text: `Error: ${error.message}`, sender: 'bot' },
       ]);
-    }, 500);
-    setInput('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVersionChange = (e) => {
     setSelectedVersion(e.target.value);
+  };
+
+  // Handle voice input
+  const handleVoiceInput = () => {
+    if (!recognition) {
+      alert('Speech Recognition API is not supported in this browser.');
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+      return;
+    }
+
+    setIsListening(true);
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setMessages((prev) => [
+        ...prev,
+        { text: `Voice input error: ${event.error}`, sender: 'bot' },
+      ]);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
   };
 
   const conversations = [
@@ -81,7 +151,6 @@ function App() {
             <div className="profile-section">
               <button className="share-btn">Share</button>
               <span className="profile-pic">{profile.profilePic}</span>
-              {/* Removed <span className="profile-name">{profile.name}</span> */}
             </div>
           </header>
           <div className="main-chat">
@@ -94,7 +163,7 @@ function App() {
                     key={index}
                     className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
                   >
-                    {msg.text}
+                    <pre>{msg.text}</pre>
                   </div>
                 ))}
               </div>
@@ -114,8 +183,13 @@ function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything..."
+              disabled={loading}
             />
-            <button type="button" className="voice-btn">
+            <button
+              type="button"
+              className={`voice-btn ${isListening ? 'listening' : ''}`}
+              onClick={handleVoiceInput}
+            >
               <img
                 src="/voice-icon.png"
                 alt="Voice"
@@ -123,8 +197,8 @@ function App() {
                 style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
-            <button type="submit" className="send-btn">
-              Send
+            <button type="submit" className="send-btn" disabled={loading}>
+              {loading ? 'Generating...' : 'Send'}
             </button>
           </form>
           <div className="disclaimer">

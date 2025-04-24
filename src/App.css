@@ -16,7 +16,7 @@
 
 .sidebar {
   width: 250px;
-  background: linear-gradient(180deg, #1E3A8A, #2B4EAD); /* Dark blue gradient */
+  background: linear-gradient(180deg, #1E3A8A, #2B4EAD);
   padding: 20px;
   border-right: 1px solid #60A5FA;
   overflow-y: auto;
@@ -67,7 +67,7 @@
   width: 100%;
   padding: 12px;
   margin-top: 20px;
-  background-color: #FF6200; /* Orange shade */
+  background-color: #FF6200;
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -77,7 +77,7 @@
 }
 
 .renew-btn:hover {
-  background-color: #E55B00; /* Darker orange shade on hover */
+  background-color: #E55B00;
 }
 
 .chat-container {
@@ -120,16 +120,16 @@
 
 .share-btn {
   padding: 5px 10px;
-  background-color: transparent; /* Remove box by making background transparent */
-  border: none; /* Remove border */
+  background-color: transparent;
+  border: none;
   cursor: pointer;
   margin-right: 10px;
-  font-size: 16px; /* Adjust size to match the ↑ icon */
+  font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .share-btn:hover {
-  color: #007bff; /* Slight color change on hover to indicate interactivity */
+  color: #007bff;
 }
 
 .profile-section {
@@ -140,11 +140,6 @@
 
 .profile-pic {
   font-size: 24px;
-}
-
-.profile-name {
-  font-size: 16px;
-  color: #202123;
 }
 
 .main-chat {
@@ -185,6 +180,33 @@
   align-self: flex-start;
 }
 
+/* Styles for markdown content */
+.message pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0;
+}
+
+/* Styles for markdown tables */
+.message pre table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.message pre table th,
+.message pre table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.message pre table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
 .input-container {
   display: flex;
   padding: 15px 20px;
@@ -209,6 +231,11 @@
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
+.input-container input:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
 .attachment-btn,
 .voice-btn {
   padding: 6px;
@@ -226,7 +253,11 @@
 }
 
 .voice-btn {
-  background-color: #e08026; /* Consistent voice icon color */
+  background-color: #e08026;
+}
+
+.voice-btn.listening {
+  background-color: #ff0000; /* Red background when listening */
 }
 
 .attachment-btn:hover {
@@ -250,6 +281,11 @@
 
 .send-btn:hover {
   background-color: #0056b3;
+}
+
+.send-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .disclaimer {
