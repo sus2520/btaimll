@@ -1,4 +1,4 @@
-echo '{
+{
   "name": "bot",
   "version": "0.1.0",
   "private": true,
@@ -10,8 +10,7 @@ echo '{
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "axios": "^1.6.8"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -19,7 +18,6 @@ echo '{
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -38,4 +36,4 @@ echo '{
       "last 1 safari version"
     ]
   }
-}' > /workspace/bot/package.json
+}
