@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import './App.css';
 
 function App() {
@@ -12,15 +11,16 @@ function App() {
   });
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [selectedVersion, setSelectedVersion] = useState('Llama 70b');
-  const [isListening, setIsListening] = useState(false);
+  const [isListening, setIsListening] = useState(false); // Track voice listening state
 
+  // Initialize Web Speech API (with prefix for compatibility)
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
   if (recognition) {
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.lang = 'en-US'; // Set language to English (adjust as needed)
   }
 
   const handleSendMessage = async (e) => {
@@ -32,14 +32,16 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL || ''}/generate-report`,
-        { prompt: input }
-      );
-      if (response.data.report) {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input }),
+      });
+      const data = await response.json();
+      if (data.report) {
         setMessages((prev) => [
           ...prev,
-          { text: response.data.report, sender: 'bot' },
+          { text: data.report, sender: 'bot' },
         ]);
       } else {
         setMessages((prev) => [
@@ -61,6 +63,7 @@ function App() {
     setSelectedVersion(e.target.value);
   };
 
+  // Handle voice input
   const handleVoiceInput = () => {
     if (!recognition) {
       alert('Speech Recognition API is not supported in this browser.');
