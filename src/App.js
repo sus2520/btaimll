@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './App.css';
 
 function App() {
@@ -22,7 +23,8 @@ function App() {
     recognition.lang = 'en-US';
   }
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
     if (input.trim() === '') return;
 
     setMessages([...messages, { text: input, sender: 'user' }]);
@@ -30,17 +32,14 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://216.81.245.138:11614/generate-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input }),
-        mode: 'cors',
-      });
-      const data = await response.json();
-      if (data.report) {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL || ''}/generate-report`,
+        { prompt: input }
+      );
+      if (response.data.report) {
         setMessages((prev) => [
           ...prev,
-          { text: data.report, sender: 'bot' },
+          { text: response.data.report, sender: 'bot' },
         ]);
       } else {
         setMessages((prev) => [
@@ -167,7 +166,7 @@ function App() {
               </div>
             )}
           </div>
-          <div className="input-container">
+          <form className="input-container" onSubmit={handleSendMessage}>
             <button type="button" className="attachment-btn">
               <img
                 src="/attach-icon.png"
@@ -195,10 +194,10 @@ function App() {
                 style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
-            <button type="button" className="send-btn" onClick={handleSendMessage} disabled={loading}>
+            <button type="submit" className="send-btn" disabled={loading}>
               {loading ? 'Generating...' : 'Send'}
             </button>
-          </div>
+          </form>
           <div className="disclaimer">
             Llama 70b Bot can make mistakes. Check important info.
           </div>
