@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 
 function App() {
@@ -11,16 +11,17 @@ function App() {
   });
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [selectedVersion, setSelectedVersion] = useState('Llama 70b');
-  const [isListening, setIsListening] = useState(false); // Track voice listening state
+  const [isListening, setIsListening] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // Initialize Web Speech API (with prefix for compatibility)
+  // Initialize Web Speech API
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
   if (recognition) {
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US'; // Set language to English (adjust as needed)
+    recognition.lang = 'en-US';
   }
 
   const handleSendMessage = async (e) => {
@@ -38,7 +39,7 @@ function App() {
         body: JSON.stringify({ prompt: input }),
       });
       const data = await response.json();
-      if (data.report) {
+      if (data.status === 'success' && data.report) {
         setMessages((prev) => [
           ...prev,
           { text: data.report, sender: 'bot' },
@@ -46,7 +47,7 @@ function App() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { text: 'Error: No report generated', sender: 'bot' },
+          { text: `Error: ${data.error || 'No report generated'}`, sender: 'bot' },
         ]);
       }
     } catch (error) {
@@ -59,11 +60,51 @@ function App() {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setMessages((prev) => [
+      ...prev,
+      { text: `Uploaded file: ${file.name}`, sender: 'user' },
+    ]);
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-report`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === 'success' && data.report) {
+        setMessages((prev) => [
+          ...prev,
+          { text: data.report, sender: 'bot' },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { text: `Error: ${data.error || 'No report generated'}`, sender: 'bot' },
+        ]);
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { text: `Error: ${error.message}`, sender: 'bot' },
+      ]);
+    } finally {
+      setLoading(false);
+      fileInputRef.current.value = null;
+    }
+  };
+
   const handleVersionChange = (e) => {
     setSelectedVersion(e.target.value);
   };
 
-  // Handle voice input
   const handleVoiceInput = () => {
     if (!recognition) {
       alert('Speech Recognition API is not supported in this browser.');
@@ -170,7 +211,18 @@ function App() {
             )}
           </div>
           <form className="input-container" onSubmit={handleSendMessage}>
-            <button type="button" className="attachment-btn">
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg"
+              onChange={handleFileUpload}
+            />
+            <button
+              type="button"
+              className="attachment-btn"
+              onClick={() => fileInputRef.current.click()}
+            >
               <img
                 src="/attach-icon.png"
                 alt="Attach"
