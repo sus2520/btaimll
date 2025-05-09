@@ -33,11 +33,16 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-report`, {
+      const response = await fetch('https://0xq2bqc3sxjbga-8888.proxy.runpod.net/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: input }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.status === 'success' && data.report) {
         setMessages((prev) => [
@@ -47,13 +52,13 @@ function App() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { text: `Error: ${data.error || 'No report generated'}`, sender: 'bot' },
+          { text: `Error: ${data.error || 'Failed to generate a response'}`, sender: 'bot' },
         ]);
       }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { text: `Error: ${error.message}`, sender: 'bot' },
+        { text: `Error: Failed to connect to the server (${error.message})`, sender: 'bot' },
       ]);
     } finally {
       setLoading(false);
@@ -67,38 +72,9 @@ function App() {
     setMessages((prev) => [
       ...prev,
       { text: `Uploaded file: ${file.name}`, sender: 'user' },
+      { text: 'Error: File uploads are not supported yet. Please send a text prompt instead.', sender: 'bot' },
     ]);
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-report`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      if (data.status === 'success' && data.report) {
-        setMessages((prev) => [
-          ...prev,
-          { text: data.report, sender: 'bot' },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { text: `Error: ${data.error || 'No report generated'}`, sender: 'bot' },
-        ]);
-      }
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { text: `Error: ${error.message}`, sender: 'bot' },
-      ]);
-    } finally {
-      setLoading(false);
-      fileInputRef.current.value = null;
-    }
+    fileInputRef.current.value = null;
   };
 
   const handleVersionChange = (e) => {
@@ -107,7 +83,10 @@ function App() {
 
   const handleVoiceInput = () => {
     if (!recognition) {
-      alert('Speech Recognition API is not supported in this browser.');
+      setMessages((prev) => [
+        ...prev,
+        { text: 'Voice input is not supported in this browser. Please type your message instead.', sender: 'bot' },
+      ]);
       return;
     }
 
@@ -130,7 +109,7 @@ function App() {
       console.error('Speech recognition error:', event.error);
       setMessages((prev) => [
         ...prev,
-        { text: `Voice input error: ${event.error}`, sender: 'bot' },
+        { text: `Voice input error: ${event.error}. Please try typing your message.`, sender: 'bot' },
       ]);
       setIsListening(false);
     };
@@ -146,120 +125,4 @@ function App() {
     'Factory Management System',
     'AI Data Extraction Bid',
     'Flight Price Prediction Model',
-    'Push to GitHub Tutorial',
-    'Image modification request',
-    'Flowchart Redraw Request',
-    'API Development for PL',
-  ];
-
-  return (
-    <div className="app">
-      <div className="main-container">
-        <div className="sidebar">
-          <div className="brand-section">
-            <img
-              src={logoSrc}
-              alt="Logo"
-              className="sidebar-logo"
-              onError={() => setLogoSrc('https://via.placeholder.com/100')}
-            />
-            <h1 className="brand-name">Llama 70b Bot</h1>
-          </div>
-          <div className="conversations">
-            <h3>Today</h3>
-            {conversations.slice(0, 3).map((conv, index) => (
-              <div key={index} className="conversation-item">
-                {conv}
-              </div>
-            ))}
-            <h3>Previous 7 Days</h3>
-            {conversations.slice(3).map((conv, index) => (
-              <div key={index + 3} className="conversation-item">
-                {conv}
-              </div>
-            ))}
-            <button className="renew-btn">Renew Plus</button>
-          </div>
-        </div>
-        <div className="chat-container">
-          <header className="header">
-            <div className="version-selector">
-              <select value={selectedVersion} onChange={handleVersionChange} className="version-dropdown">
-                <option value="Llama 70b">Llama 70b</option>
-                <option value="GPT 4o">GPT 4o</option>
-              </select>
-            </div>
-            <div className="profile-section">
-              <button className="share-btn">Share</button>
-              <span className="profile-pic">{profile.profilePic}</span>
-            </div>
-          </header>
-          <div className="main-chat">
-            {messages.length === 0 ? (
-              <div className="welcome-message">What can I help with?</div>
-            ) : (
-              <div className="messages">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
-                  >
-                    <pre>{msg.text}</pre>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <form className="input-container" onSubmit={handleSendMessage}>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg"
-              onChange={handleFileUpload}
-            />
-            <button
-              type="button"
-              className="attachment-btn"
-              onClick={() => fileInputRef.current.click()}
-            >
-              <img
-                src="/attach-icon.png"
-                alt="Attach"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything..."
-              disabled={loading}
-            />
-            <button
-              type="button"
-              className={`voice-btn ${isListening ? 'listening' : ''}`}
-              onClick={handleVoiceInput}
-            >
-              <img
-                src="/voice-icon.png"
-                alt="Voice"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
-            </button>
-            <button type="submit" className="send-btn" disabled={loading}>
-              {loading ? 'Generating...' : 'Send'}
-            </button>
-          </form>
-          <div className="disclaimer">
-            Llama 70b Bot can make mistakes. Check important info.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default App;
+    'Push to
