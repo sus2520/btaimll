@@ -125,4 +125,120 @@ function App() {
     'Factory Management System',
     'AI Data Extraction Bid',
     'Flight Price Prediction Model',
-    'Push to
+    'Push to GitHub Tutorial',
+    'Image modification request',
+    'Flowchart Redraw Request',
+    'API Development for PL',
+  ];
+
+  return (
+    <div className="app">
+      <div className="main-container">
+        <div className="sidebar">
+          <div className="brand-section">
+            <img
+              src={logoSrc}
+              alt="Logo"
+              className="sidebar-logo"
+              onError={() => setLogoSrc('https://via.placeholder.com/100')}
+            />
+            <h1 className="brand-name">Llama 70b Bot</h1>
+          </div>
+          <div className="conversations">
+            <h3>Today</h3>
+            {conversations.slice(0, 3).map((conv, index) => (
+              <div key={index} className="conversation-item">
+                {conv}
+              </div>
+            ))}
+            <h3>Previous 7 Days</h3>
+            {conversations.slice(3).map((conv, index) => (
+              <div key={index + 3} className="conversation-item">
+                {conv}
+              </div>
+            ))}
+            <button className="renew-btn">Renew Plus</button>
+          </div>
+        </div>
+        <div className="chat-container">
+          <header className="header">
+            <div className="version-selector">
+              <select value={selectedVersion} onChange={handleVersionChange} className="version-dropdown">
+                <option value="Llama 70b">Llama 70b</option>
+                <option value="GPT 4o">GPT 4o</option>
+              </select>
+            </div>
+            <div className="profile-section">
+              <button className="share-btn">Share</button>
+              <span className="profile-pic">{profile.profilePic}</span>
+            </div>
+          </header>
+          <div className="main-chat">
+            {messages.length === 0 ? (
+              <div className="welcome-message">What can I help with?</div>
+            ) : (
+              <div className="messages">
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
+                  >
+                    <pre>{msg.text}</pre>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <form className="input-container" onSubmit={handleSendMessage}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg"
+              onChange={handleFileUpload}
+            />
+            <button
+              type="button"
+              className="attachment-btn"
+              onClick={() => fileInputRef.current.click()}
+            >
+              <img
+                src="/attach-icon.png"
+                alt="Attach"
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
+                style={{ maxWidth: '100%', height: 'auto' }}
+              />
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask anything..."
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className={`voice-btn ${isListening ? 'listening' : ''}`}
+              onClick={handleVoiceInput}
+            >
+              <img
+                src="/voice-icon.png"
+                alt="Voice"
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
+                style={{ maxWidth: '100%', height: 'auto' }}
+              />
+            </button>
+            <button type="submit" className="send-btn" disabled={loading}>
+              {loading ? 'Generating...' : 'Send'}
+            </button>
+          </form>
+          <div className="disclaimer">
+            Llama 70b Bot can make mistakes. Check important info.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
