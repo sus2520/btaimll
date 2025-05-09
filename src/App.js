@@ -33,7 +33,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://0xq2bqc3sxjbga-8888.proxy.runpod.net/generate', {
+      const response = await fetch('https://7xndroa6macv7m-8888.proxy.runpod.net/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: input }),
