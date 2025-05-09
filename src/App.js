@@ -33,7 +33,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://7xndroa6macv7m-8888.proxy.runpod.net/generate', {
+      const response = await fetch('https://2hhdrqv35wrguc.proxy.runpod.net/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: input }),
@@ -44,10 +44,10 @@ function App() {
       }
 
       const data = await response.json();
-      if (data.status === 'success' && data.report) {
+      if (data.status === 'success' && data.response) {
         setMessages((prev) => [
           ...prev,
-          { text: data.report, sender: 'bot' },
+          { text: data.response, sender: 'bot' },
         ]);
       } else {
         setMessages((prev) => [
