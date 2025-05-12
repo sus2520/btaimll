@@ -1,4 +1,3 @@
-/* App.css */
 .app {
   display: flex;
   flex-direction: column;
@@ -207,6 +206,30 @@
   font-weight: bold;
 }
 
+/* Loading indicator style */
+.loading {
+  text-align: center;
+  padding: 10px;
+  color: #666;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+/* Pulse animation for loading indicator */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Error message styling */
+.message.bot.error {
+  background-color: #ffe6e6;
+  color: #d32f2f;
+  border-left: 4px solid #d32f2f;
+}
+
+/* Enhance input container for better spacing on smaller screens */
 .input-container {
   display: flex;
   padding: 15px 20px;
@@ -295,4 +318,30 @@
   text-align: center;
   border-top: 1px solid #e5e7eb;
   background-color: #fff;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-chat {
+    padding: 10px;
+  }
+
+  .input-container {
+    padding: 10px;
+  }
+
+  .input-container input {
+    margin: 0 5px;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .send-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }

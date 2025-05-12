@@ -33,7 +33,16 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://9m63fsnelcrey6.proxy.runpod.net:8888/generate', {
+      if (selectedVersion === 'GPT 4o') {
+        setMessages((prev) => [
+          ...prev,
+          { text: 'Error: GPT 4o is not supported yet. Please use Llama 70b.', sender: 'bot' },
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('https://227c-216-81-248-128.ngrok-free.app/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: input }),
@@ -186,6 +195,7 @@ function App() {
                     <pre>{msg.text}</pre>
                   </div>
                 ))}
+                {loading && <div className="loading">Loading...</div>}
               </div>
             )}
           </div>
