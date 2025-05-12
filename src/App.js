@@ -13,7 +13,7 @@ function App() {
     profilePic: '👤',
   });
   const [logoSrc, setLogoSrc] = useState('/logo.png');
-  const [selectedVersion, setSelectedVersion] = useState('Llama 70b');
+  const [selectedVersion, setSelectedVersion] = useState('Llama 3 70b');
   const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -42,7 +42,7 @@ function App() {
       if (selectedVersion === 'GPT 4o') {
         setMessages((prev) => [
           ...prev,
-          { text: 'Error: GPT 4o is not supported yet. Please use Llama 70b.', sender: 'bot' },
+          { text: 'Error: GPT 4o is not supported yet. Please use Llama 3 70b.', sender: 'bot' },
         ]);
         setLoading(false);
         return;
@@ -52,7 +52,7 @@ function App() {
       const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input }),
+        body: JSON.stringify({ prompt: input, max_new_tokens: 20 }), // Add max_new_tokens
       });
 
       if (!response.ok) {
@@ -165,7 +165,7 @@ function App() {
               className="sidebar-logo"
               onError={() => setLogoSrc('https://via.placeholder.com/100')}
             />
-            <h1 className="brand-name">Llama 70b Bot</h1>
+            <h1 className="brand-name">Llama 3 70b Bot</h1>
           </div>
           <div className="conversations">
             <h3>Today</h3>
@@ -187,7 +187,7 @@ function App() {
           <header className="header">
             <div className="version-selector">
               <select value={selectedVersion} onChange={handleVersionChange} className="version-dropdown">
-                <option value="Llama 70b">Llama 70b</option>
+                <option value="Llama 3 70b">Llama 3 70b</option>
                 <option value="GPT 4o">GPT 4o</option>
               </select>
             </div>
@@ -253,11 +253,11 @@ function App() {
               />
             </button>
             <button type="submit" className="send-btn" disabled={loading}>
-              {loading ? 'Generating..' : 'Send'}
+              {loading ? 'Generating...' : 'Send'}
             </button>
           </form>
           <div className="disclaimer">
-            Llama 70b Bot can make mistakes. Check important info.
+            Llama 3 70b Bot can make mistakes. Check important info.
           </div>
         </div>
       </div>
