@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
+// Use environment variable for API URL, with fallback to the provided ngrok URL
+const API_URL = process.env.REACT_APP_API_URL || 'https://2a7d-216-81-248-128.ngrok-free.app';
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -14,7 +17,7 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Initialize Web Speech API
+  // Initialize Web Speech API for voice input
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
@@ -24,15 +27,18 @@ function App() {
     recognition.lang = 'en-US';
   }
 
+  // Handle sending a message to the backend
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === '') return;
 
+    // Add user message to chat
     setMessages([...messages, { text: input, sender: 'user' }]);
     setInput('');
     setLoading(true);
 
     try {
+      // Check if unsupported model is selected
       if (selectedVersion === 'GPT 4o') {
         setMessages((prev) => [
           ...prev,
@@ -42,7 +48,8 @@ function App() {
         return;
       }
 
-      const response = await fetch('https://227c-216-81-248-128.ngrok-free.app/generate', {
+      // Send request to backend
+      const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: input }),
@@ -54,17 +61,20 @@ function App() {
 
       const data = await response.json();
       if (data.status === 'success' && data.response) {
+        // Add successful bot response
         setMessages((prev) => [
           ...prev,
           { text: data.response, sender: 'bot' },
         ]);
       } else {
+        // Handle backend error
         setMessages((prev) => [
           ...prev,
           { text: `Error: ${data.error || 'Failed to generate a response'}`, sender: 'bot' },
         ]);
       }
     } catch (error) {
+      // Handle network or server errors
       setMessages((prev) => [
         ...prev,
         { text: `Error: Failed to connect to the server (${error.message})`, sender: 'bot' },
@@ -74,6 +84,7 @@ function App() {
     }
   };
 
+  // Handle file upload (currently unsupported)
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -86,10 +97,12 @@ function App() {
     fileInputRef.current.value = null;
   };
 
+  // Handle model version change
   const handleVersionChange = (e) => {
     setSelectedVersion(e.target.value);
   };
 
+  // Handle voice input using Web Speech API
   const handleVoiceInput = () => {
     if (!recognition) {
       setMessages((prev) => [
@@ -128,6 +141,7 @@ function App() {
     };
   };
 
+  // Static list of conversation topics
   const conversations = [
     'Project Proposal Rewrite',
     'Image similarity',
@@ -239,7 +253,7 @@ function App() {
               />
             </button>
             <button type="submit" className="send-btn" disabled={loading}>
-              {loading ? 'Generating...' : 'Send'}
+              {loading ? 'Generating..' : 'Send'}
             </button>
           </form>
           <div className="disclaimer">
