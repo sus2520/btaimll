@@ -1,23 +1,21 @@
 import React, { useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './App.css';
 
-// Use environment variable for API URL, with fallback to the provided ngrok URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://2a7d-216-81-248-128.ngrok-free.app';
+const API_URL = 'https://ca98-216-81-245-143.ngrok-free.app';
 
 function App() {
-  const [messages, setMessages] = useState([]);
+  const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
+  const [currentSession, setCurrentSession] = useState(null); // Current active session
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [profile] = useState({
-    name: 'Guest',
-    profilePic: '👤',
-  });
+  const [profile] = useState({ name: 'Guest', profilePic: '👤' });
   const [logoSrc, setLogoSrc] = useState('/logo.png');
-  const [selectedVersion, setSelectedVersion] = useState('Llama 3 70b');
   const [isListening, setIsListening] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('basic'); // Default to basic
+  const [editingMessageIndex, setEditingMessageIndex] = useState(null); // Track message being edited
   const fileInputRef = useRef(null);
 
-  // Initialize Web Speech API for voice input
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
@@ -27,132 +25,330 @@ function App() {
     recognition.lang = 'en-US';
   }
 
-  // Handle sending a message to the backend
+  // Function to parse Markdown tables from text
+  const parseTableFromText = (text) => {
+    if (!text || typeof text !== 'string') return null;
+
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    let headers = null;
+    const rows = [];
+    let isTable = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.match(/^\|.*\|$/)) {
+        const parts = line.split('|').map(item => item.trim()).filter(item => item !== '');
+        if (!headers) {
+          headers = parts;
+          isTable = true;
+          if (i + 1 < lines.length && lines[i + 1].match(/^\|[-:\s|]+\|$/)) {
+            i++; // Skip separator row
+          }
+        } else {
+          const row = parts;
+          if (row.length === headers.length) {
+            rows.push(row);
+          }
+        }
+      }
+    }
+
+    return isTable && headers && rows.length > 0 ? { headers, rows } : null;
+  };
+
+  // Function to download table as CSV
+  const downloadTableAsCSV = (tableData, fileName = 'table') => {
+    const { headers, rows } = tableData;
+
+    // Escape CSV values (handle commas, quotes, etc.)
+    const escapeCSV = (value) => {
+      if (typeof value !== 'string') return value;
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    // Create CSV content
+    const csvRows = [
+      headers.map(escapeCSV).join(','), // Header row
+      ...rows.map(row => row.map(escapeCSV).join(',')) // Data rows
+    ];
+    const csvContent = csvRows.join('\n');
+
+    // Create a Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${fileName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const startNewSession = (title = 'Untitled Chat') => {
+    const newSession = {
+      id: Date.now(),
+      title,
+      messages: [],
+      timestamp: new Date(),
+    };
+    setChatSessions((prev) => [...prev, newSession]);
+    setCurrentSession(newSession);
+    return newSession;
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === '') return;
 
-    // Add user message to chat
-    setMessages([...messages, { text: input, sender: 'user' }]);
+    let session = currentSession;
+    if (!session) {
+      session = startNewSession(input.length > 30 ? input.slice(0, 27) + '...' : input);
+    }
+
+    let updatedSession;
+    if (editingMessageIndex !== null) {
+      const updatedMessages = [...session.messages];
+      updatedMessages[editingMessageIndex] = { type: 'text', data: input, raw: input, sender: 'user' };
+      if (updatedMessages[editingMessageIndex + 1]?.sender === 'bot') {
+        updatedMessages.splice(editingMessageIndex + 1, 1);
+      }
+      updatedSession = { ...session, messages: updatedMessages };
+      setEditingMessageIndex(null);
+    } else {
+      const newMessage = { type: 'text', data: input, raw: input, sender: 'user' };
+      updatedSession = {
+        ...session,
+        messages: [...session.messages, newMessage],
+      };
+    }
+
+    setChatSessions((prev) =>
+      prev.map((s) => (s.id === session.id ? updatedSession : s))
+    );
+    setCurrentSession(updatedSession);
+    const userPrompt = input;
     setInput('');
     setLoading(true);
 
     try {
-      // Check if unsupported model is selected
-      if (selectedVersion === 'GPT 4o') {
-        setMessages((prev) => [
-          ...prev,
-          { text: 'Error: GPT 4o is not supported yet. Please use Llama 3 70b.', sender: 'bot' },
-        ]);
-        setLoading(false);
-        return;
-      }
-
-      // Send request to backend
       const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input, max_new_tokens: 20 }), // Add max_new_tokens
+        body: JSON.stringify({ prompt: userPrompt, model: selectedModel, max_new_tokens: 500 }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
       if (data.status === 'success' && data.response) {
-        // Add successful bot response
-        setMessages((prev) => [
-          ...prev,
-          { text: data.response, sender: 'bot' },
-        ]);
+        const tableData = parseTableFromText(data.response);
+        const botMessage = tableData
+          ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
+          : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+
+        const updatedSessionWithBot = {
+          ...updatedSession,
+          messages: [...updatedSession.messages, botMessage],
+        };
+        setChatSessions((prev) =>
+          prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
+        );
+        setCurrentSession(updatedSessionWithBot);
       } else {
-        // Handle backend error
-        setMessages((prev) => [
-          ...prev,
-          { text: `Error: ${data.error || 'Failed to generate a response'}`, sender: 'bot' },
-        ]);
+        const errorMessage = { type: 'text', data: `Error: ${data.error || 'Failed to generate response'}`, raw: data.error, sender: 'bot', error: true };
+        const updatedSessionWithError = {
+          ...updatedSession,
+          messages: [...updatedSession.messages, errorMessage],
+        };
+        setChatSessions((prev) =>
+          prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
+        );
+        setCurrentSession(updatedSessionWithError);
       }
     } catch (error) {
-      // Handle network or server errors
-      setMessages((prev) => [
-        ...prev,
-        { text: `Error: Failed to connect to the server (${error.message})`, sender: 'bot' },
-      ]);
+      const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
+      const updatedSessionWithError = {
+        ...updatedSession,
+        messages: [...updatedSession.messages, errorMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
+      );
+      setCurrentSession(updatedSessionWithError);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle file upload (currently unsupported)
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { text: `Uploaded file: ${file.name}`, sender: 'user' },
-      { text: 'Error: File uploads are not supported yet. Please send a text prompt instead.', sender: 'bot' },
-    ]);
-    fileInputRef.current.value = null;
-  };
-
-  // Handle model version change
-  const handleVersionChange = (e) => {
-    setSelectedVersion(e.target.value);
-  };
-
-  // Handle voice input using Web Speech API
-  const handleVoiceInput = () => {
-    if (!recognition) {
-      setMessages((prev) => [
-        ...prev,
-        { text: 'Voice input is not supported in this browser. Please type your message instead.', sender: 'bot' },
-      ]);
-      return;
+    let session = currentSession;
+    if (!session) {
+      session = startNewSession(`Uploaded: ${file.name}`);
     }
 
+    const newMessage = { type: 'text', data: `Uploaded file: ${file.name}`, raw: `Uploaded file: ${file.name}`, sender: 'user' };
+    const updatedSession = {
+      ...session,
+      messages: [...session.messages, newMessage],
+    };
+    setChatSessions((prev) =>
+      prev.map((s) => (s.id === session.id ? updatedSession : s))
+    );
+    setCurrentSession(updatedSession);
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', 'Process the uploaded file');
+      formData.append('model', selectedModel);
+      formData.append('max_new_tokens', 500);
+
+      const response = await fetch(`${API_URL}/generate`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      if (data.status === 'success' && data.response) {
+        const tableData = parseTableFromText(data.response);
+        const botMessage = tableData
+          ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
+          : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+
+        const updatedSessionWithBot = {
+          ...updatedSession,
+          messages: [...updatedSession.messages, botMessage],
+        };
+        setChatSessions((prev) =>
+          prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
+        );
+        setCurrentSession(updatedSessionWithBot);
+      } else {
+        const errorMessage = { type: 'text', data: `Error: ${data.error || 'Failed to generate response'}`, raw: data.error, sender: 'bot', error: true };
+        const updatedSessionWithError = {
+          ...updatedSession,
+          messages: [...updatedSession.messages, errorMessage],
+        };
+        setChatSessions((prev) =>
+          prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
+        );
+        setCurrentSession(updatedSessionWithError);
+      }
+    } catch (error) {
+      const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
+      const updatedSessionWithError = {
+        ...updatedSession,
+        messages: [...updatedSession.messages, errorMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
+      );
+      setCurrentSession(updatedSessionWithError);
+    } finally {
+      setLoading(false);
+      fileInputRef.current.value = null;
+    }
+  };
+
+  const handleVoiceInput = () => {
+    if (!recognition) {
+      const errorMessage = { type: 'text', data: 'Voice input not supported.', raw: 'Voice input not supported.', sender: 'bot', error: true };
+      let session = currentSession;
+      if (!session) {
+        session = startNewSession('Voice Input Error');
+      }
+      const updatedSession = {
+        ...session,
+        messages: [...session.messages, errorMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSession : s))
+      );
+      setCurrentSession(updatedSession);
+      return;
+    }
     if (isListening) {
       recognition.stop();
       setIsListening(false);
       return;
     }
-
     setIsListening(true);
     recognition.start();
-
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
+      setInput(event.results[0][0].transcript);
       setIsListening(false);
     };
-
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setMessages((prev) => [
-        ...prev,
-        { text: `Voice input error: ${event.error}. Please try typing your message.`, sender: 'bot' },
-      ]);
+      const errorMessage = { type: 'text', data: `Voice input error: ${event.error}`, raw: `Voice input error: ${event.error}`, sender: 'bot', error: true };
+      let session = currentSession;
+      if (!session) {
+        session = startNewSession('Voice Input Error');
+      }
+      const updatedSession = {
+        ...session,
+        messages: [...session.messages, errorMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSession : s))
+      );
+      setCurrentSession(updatedSession);
       setIsListening(false);
     };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+    recognition.onend = () => setIsListening(false);
   };
 
-  // Static list of conversation topics
-  const conversations = [
-    'Project Proposal Rewrite',
-    'Image similarity',
-    'Factory Management System',
-    'AI Data Extraction Bid',
-    'Flight Price Prediction Model',
-    'Push to GitHub Tutorial',
-    'Image modification request',
-    'Flowchart Redraw Request',
-    'API Development for PL',
+  const handleDeleteSession = (sessionId) => {
+    setChatSessions(chatSessions.filter((session) => session.id !== sessionId));
+    if (currentSession && currentSession.id === sessionId) {
+      setCurrentSession(null);
+    }
+  };
+
+  const handleEditPrompt = (data, index) => {
+    setInput(data);
+    setEditingMessageIndex(index);
+  };
+
+  const handleCancelEdit = () => {
+    setInput('');
+    setEditingMessageIndex(null);
+  };
+
+  const handleUpdateSessionTitle = (sessionId, newTitle) => {
+    const updatedSessions = chatSessions.map((session) =>
+      session.id === sessionId ? { ...session, title: newTitle } : session
+    );
+    setChatSessions(updatedSessions);
+    if (currentSession && currentSession.id === sessionId) {
+      setCurrentSession({ ...currentSession, title: newTitle });
+    }
+  };
+
+  const handleSelectSession = (session) => {
+    setCurrentSession(session);
+    setEditingMessageIndex(null);
+  };
+
+  const models = [
+    { value: 'basic', label: 'Basic (LLaMA 3 8B)' },
+    { value: 'ultra', label: 'Ultra (LLaMA 3 70B)' },
   ];
+
+  const isWithinLast7Days = (timestamp) => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+    return new Date(timestamp) >= sevenDaysAgo;
+  };
 
   return (
     <div className="app">
@@ -163,53 +359,178 @@ function App() {
               src={logoSrc}
               alt="Logo"
               className="sidebar-logo"
-              onError={() => setLogoSrc('https://via.placeholder.com/100')}
+              onError={() => setLogoSrc('https://via.placeholder.com/40')}
             />
-            <h1 className="brand-name">Llama 3 70b Bot</h1>
+            <h1 className="brand-name">AI Chatbot</h1>
           </div>
           <div className="conversations">
             <h3>Today</h3>
-            {conversations.slice(0, 3).map((conv, index) => (
-              <div key={index} className="conversation-item">
-                {conv}
-              </div>
-            ))}
+            {chatSessions
+              .filter((session) => {
+                const today = new Date();
+                const sessionDate = new Date(session.timestamp);
+                return (
+                  sessionDate.getDate() === today.getDate() &&
+                  sessionDate.getMonth() === today.getMonth() &&
+                  sessionDate.getFullYear() === today.getFullYear()
+                );
+              })
+              .map((session) => (
+                <div
+                  key={session.id}
+                  className={`conversation-item ${currentSession && currentSession.id === session.id ? 'active' : ''}`}
+                >
+                  <span
+                    onClick={() => handleSelectSession(session)}
+                    style={{ flex: 1 }}
+                  >
+                    {session.title}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newTitle = prompt('Enter new title:', session.title);
+                      if (newTitle) handleUpdateSessionTitle(session.id, newTitle);
+                    }}
+                    className="edit"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSession(session.id)}
+                    className="delete"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
             <h3>Previous 7 Days</h3>
-            {conversations.slice(3).map((conv, index) => (
-              <div key={index + 3} className="conversation-item">
-                {conv}
-              </div>
-            ))}
-            <button className="renew-btn">Renew Plus</button>
+            {chatSessions
+              .filter(
+                (session) =>
+                  isWithinLast7Days(session.timestamp) &&
+                  !(
+                    new Date(session.timestamp).getDate() === new Date().getDate() &&
+                    new Date(session.timestamp).getMonth() === new Date().getMonth() &&
+                    new Date(session.timestamp).getFullYear() === new Date().getFullYear()
+                  )
+              )
+              .map((session) => (
+                <div
+                  key={session.id}
+                  className={`conversation-item ${currentSession && currentSession.id === session.id ? 'active' : ''}`}
+                >
+                  <span
+                    onClick={() => handleSelectSession(session)}
+                    style={{ flex: 1 }}
+                  >
+                    {session.title}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newTitle = prompt('Enter new title:', session.title);
+                      if (newTitle) handleUpdateSessionTitle(session.id, newTitle);
+                    }}
+                    className="edit"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSession(session.id)}
+                    className="delete"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            <button className="renew-btn" onClick={() => startNewSession()}>
+              New Chat
+            </button>
           </div>
         </div>
         <div className="chat-container">
           <header className="header">
             <div className="version-selector">
-              <select value={selectedVersion} onChange={handleVersionChange} className="version-dropdown">
-                <option value="Llama 3 70b">Llama 3 70b</option>
-                <option value="GPT 4o">GPT 4o</option>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="version-dropdown"
+              >
+                {models.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="profile-section">
-              <button className="share-btn">Share</button>
+              <button className="share-btn">🔗</button>
               <span className="profile-pic">{profile.profilePic}</span>
             </div>
           </header>
           <div className="main-chat">
-            {messages.length === 0 ? (
-              <div className="welcome-message">What can I help with?</div>
+            {currentSession ? (
+              <div>
+                <h2>{currentSession.title}</h2>
+                <div className="messages">
+                  {currentSession.messages.map((msg, index) => {
+                    const messageType = msg.type || (msg.text ? 'text' : 'unknown');
+                    const messageData = msg.data || msg.text || '';
+                    const rawData = msg.raw || msg.text || '';
+
+                    return (
+                      <div
+                        key={index}
+                        className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}
+                      >
+                        {messageType === 'table' && messageData.headers && messageData.rows ? (
+                          <div className="table-container">
+                            <table className="response-table">
+                              <thead>
+                                <tr>
+                                  {messageData.headers.map((header, idx) => (
+                                    <th key={idx}>{header}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {messageData.rows.map((row, rowIdx) => (
+                                  <tr key={rowIdx}>
+                                    {row.map((cell, cellIdx) => (
+                                      <td key={cellIdx}>{cell}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            <button
+                              className="download-btn"
+                              onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
+                            >
+                              Download Table
+                            </button>
+                          </div>
+                        ) : (
+                          <ReactMarkdown>{messageData}</ReactMarkdown>
+                        )}
+                        {msg.sender === 'user' && (
+                          <div>
+                            <button
+                              onClick={() => handleEditPrompt(messageData, index)}
+                              className="edit"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {loading && <div className="loading">Loading...</div>}
+                </div>
+              </div>
             ) : (
-              <div className="messages">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
-                  >
-                    <pre>{msg.text}</pre>
-                  </div>
-                ))}
-                {loading && <div className="loading">Loading...</div>}
+              <div className="welcome-message">
+                What can I help with? Try typing a prompt or uploading a file (.txt, .docx, .pdf, or image).
               </div>
             )}
           </div>
@@ -218,7 +539,7 @@ function App() {
               type="file"
               ref={fileInputRef}
               style={{ display: 'none' }}
-              accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg"
+              accept=".txt,.docx,.pdf,image/*"
               onChange={handleFileUpload}
             />
             <button
@@ -229,7 +550,7 @@ function App() {
               <img
                 src="/attach-icon.png"
                 alt="Attach"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
+                onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
                 style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
@@ -237,9 +558,18 @@ function App() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything..."
+              placeholder="Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."
               disabled={loading}
             />
+            {editingMessageIndex !== null && (
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="button"
               className={`voice-btn ${isListening ? 'listening' : ''}`}
@@ -248,16 +578,16 @@ function App() {
               <img
                 src="/voice-icon.png"
                 alt="Voice"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/24'; }}
+                onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
                 style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
             <button type="submit" className="send-btn" disabled={loading}>
-              {loading ? 'Generating...' : 'Send'}
+              {loading ? 'Generating...' : editingMessageIndex !== null ? 'Update' : 'Send'}
             </button>
           </form>
           <div className="disclaimer">
-            Llama 3 70b Bot can make mistakes. Check important info.
+            AI Chatbot can make mistakes. Check important info.
           </div>
         </div>
       </div>
