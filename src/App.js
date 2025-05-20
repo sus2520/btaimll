@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 
-const API_URL = 'https://43ce-216-81-248-113.ngrok-free.app';
+const API_URL = ' https://29f3-216-81-245-98.ngrok-free.app';
 
 function App() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
