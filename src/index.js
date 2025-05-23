@@ -4,10 +4,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
 import Login from './Login';
 import Signup from './Signup';
-import './index.css';
+import './App.css';
 
 // Authentication context
-const AuthContext = React.createContext();
+export const AuthContext = React.createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
