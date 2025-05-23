@@ -1,20 +1,23 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 
 const API_URL = 'https://a09d-216-81-245-137.ngrok-free.app';
+const AuthContext = React.createContext();
 
 function App() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
   const [currentSession, setCurrentSession] = useState(null); // Current active session
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [profile] = useState({ name: 'Guest', profilePic: '👤' });
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic'); // Default to basic
   const [editingMessageIndex, setEditingMessageIndex] = useState(null); // Track message being edited
   const fileInputRef = useRef(null);
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
@@ -135,9 +138,13 @@ function App() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ prompt: userPrompt, model: selectedModel, max_new_tokens: 500 }),
       });
 
@@ -205,6 +212,7 @@ function App() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
       formData.append('prompt', 'Process the uploaded file');
@@ -213,6 +221,9 @@ function App() {
 
       const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -464,7 +475,17 @@ function App() {
             </div>
             <div className="profile-section">
               <button className="share-btn">🔗</button>
-              <span className="profile-pic">{profile.profilePic}</span>
+              <span className="profile-pic">{user?.profilePic || '👤'}</span>
+              <span className="profile-name">{user?.name || 'Guest'}</span>
+              <button
+                className="logout-btn"
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+              >
+                Logout
+              </button>
             </div>
           </header>
           <div className="main-chat">
