@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://a09d-216-81-245-137.ngrok-free.app';
+const API_URL = 'https://00a3-216-81-245-137.ngrok-free.app';
 
 const Login = () => {
   const [email, setEmail] = useState('');
