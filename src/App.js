@@ -1,10 +1,10 @@
 import React, { useState, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { AuthContext } from './index';
 import './App.css';
 
 const API_URL = 'https://a09d-216-81-245-137.ngrok-free.app';
-const AuthContext = React.createContext();
 
 function App() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
@@ -571,8 +571,8 @@ function App() {
               <img
                 src="/attach-icon.png"
                 alt="Attach"
+                className="attachment-icon"
                 onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
-                style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
             <input
@@ -581,6 +581,7 @@ function App() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."
               disabled={loading}
+              className="prompt-input"
             />
             {editingMessageIndex !== null && (
               <button
@@ -599,8 +600,8 @@ function App() {
               <img
                 src="/voice-icon.png"
                 alt="Voice"
+                className="voice-icon"
                 onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
-                style={{ maxWidth: '100%', height: 'auto' }}
               />
             </button>
             <button type="submit" className="send-btn" disabled={loading}>

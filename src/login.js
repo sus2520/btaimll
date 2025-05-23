@@ -1,9 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from './index';
 
 const API_URL = 'https://a09d-216-81-245-137.ngrok-free.app';
-
-const AuthContext = React.createContext();
 
 const Login = () => {
   const [email, setEmail] = useState('');
