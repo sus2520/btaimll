@@ -9,7 +9,7 @@ import './App.css';
 // Authentication context
 export const AuthContext = React.createContext();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {  // Added export here
   const [user, setUser] = useState(null);
 
   useEffect(() => {
