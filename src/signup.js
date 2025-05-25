@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://2dec-216-81-245-137.ngrok-free.app';
+const API_URL = 'https://login-1-8dx3.onrender.com';
 
 const Signup = () => {
   const [name, setName] = useState('');
