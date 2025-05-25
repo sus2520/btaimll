@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
-import Login from './login';
-import Signup from './signup';
+import Login from './Login';
+import Signup from './Signup';
 import './App.css';
 
 // Authentication context
@@ -43,15 +43,15 @@ const AuthProvider = ({ children }) => {
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const { user } = React.useContext(AuthContext);
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/Login" />;
 };
 
 const Root = () => (
   <AuthProvider>
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/Login" element={<Login />} />
+        <Route path="/Signup" element={<Signup />} />
         <Route
           path="/"
           element={
