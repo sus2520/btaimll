@@ -11,14 +11,49 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [profilePic, setProfilePic] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Client-side validation for password strength
+  const checkPasswordStrength = (pwd) => {
+    if (pwd.length < 8) return 'Weak';
+    if (!/[A-Z]/.test(pwd) || !/\d/.test(pwd)) return 'Moderate';
+    return 'Strong';
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordStrength(checkPasswordStrength(newPassword));
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
+
+    // Client-side validation
+    if (!name.trim()) {
+      setError('Name cannot be empty');
+      setLoading(false);
+      return;
+    }
+
+    if (passwordStrength !== 'Strong') {
+      setError('Password must be at least 8 characters long and contain at least one uppercase letter and one digit');
+      setLoading(false);
+      return;
+    }
+
+    if (profilePic && profilePic.size > 2 * 1024 * 1024) { // 2MB limit
+      setError('Profile picture must be less than 2MB');
+      setLoading(false);
+      return;
+    }
 
     try {
       const formData = new FormData();
@@ -34,14 +69,15 @@ const Signup = () => {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Signup failed');
-
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Signup failed'); // Use 'detail' from HTTPException
+      }
+
       if (data.status === 'success') {
-        login(data.user, null); // No token in backend response
-        navigate('/');
-      } else {
-        setError(data.error || 'Failed to create account');
+        setSuccess('Signup successful! Redirecting to homepage...');
+        login(data.user, null);
+        setTimeout(() => navigate('/'), 2000); // Delay redirection for user feedback
       }
     } catch (err) {
       setError(err.message || 'An error occurred');
@@ -97,11 +133,16 @@ const Signup = () => {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               className="form-input"
               placeholder="Enter your password"
               required
             />
+            {password && (
+              <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
+                Password Strength: {passwordStrength}
+              </p>
+            )}
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="profilePic">
@@ -116,10 +157,11 @@ const Signup = () => {
             />
           </div>
           {error && <p className="form-error">{error}</p>}
+          {success && <p className="form-success">{success}</p>}
           <button
             type="submit"
             className="form-button"
-            disabled={loading}
+            disabled={loading || passwordStrength !== 'Strong'}
           >
             {loading ? 'Signing up...' : 'Sign Up'}
           </button>
