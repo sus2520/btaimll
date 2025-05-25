@@ -8,7 +8,7 @@ import ForgotPassword from './ForgotPassword';
 import './App.css';
 
 
-const API_URL = 'https://login-s0mj.onrender.com'; 
+const API_URL = 'https://login-1-8dx3.onrender.com'; 
 
 function ChatApp() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions

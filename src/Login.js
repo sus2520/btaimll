@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://login-s0mj.onrender.com';
+const API_URL = 'https://login-1-8dx3.onrender.com';
 
 const Login = () => {
   const [email, setEmail] = useState('');
