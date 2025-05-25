@@ -7,7 +7,8 @@ import Signup from './Signup';
 import ForgotPassword from './ForgotPassword';
 import './App.css';
 
-const API_URL = 'https://login-s0mj.onrender.com'; // Updated to deployed backend
+
+const API_URL = 'https://login-s0mj.onrender.com'; 
 
 function ChatApp() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
