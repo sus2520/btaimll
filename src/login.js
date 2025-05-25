@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://login-1-8dx3.onrender.com';
+const API_URL = 'https://login-s0mj.onrender.com';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,8 +28,8 @@ const Login = () => {
       if (!response.ok) throw new Error('Login failed');
 
       const data = await response.json();
-      if (data.status === 'success' && data.token && data.user) {
-        login(data.user, data.token);
+      if (data.status === 'success') {
+        login(data.user, null); // No token in backend response
         navigate('/');
       } else {
         setError(data.error || 'Invalid credentials');
@@ -91,6 +91,9 @@ const Login = () => {
         </form>
         <p className="form-link">
           Don't have an account? <Link to="/signup">Sign up</Link>
+        </p>
+        <p className="form-link">
+          Forgot your password? <Link to="/forgot-password">Reset it</Link>
         </p>
       </div>
     </div>

@@ -1,12 +1,15 @@
 import React, { useState, useRef, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route, BrowserRouter as Router } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { AuthContext } from './index';
+import { AuthContext, AuthProvider } from './index';
+import Login from './Login';
+import Signup from './Signup';
+import ForgotPassword from './ForgotPassword';
 import './App.css';
 
-const API_URL = 'https://2dec-216-81-245-137.ngrok-free.app';
+const API_URL = 'https://login-s0mj.onrender.com'; // Updated to deployed backend
 
-function App() {
+function ChatApp() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
   const [currentSession, setCurrentSession] = useState(null); // Current active session
   const [input, setInput] = useState('');
@@ -138,44 +141,25 @@ function App() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ prompt: userPrompt, model: selectedModel, max_new_tokens: 500 }),
-      });
+      // Placeholder response since /generate endpoint is not implemented
+      const data = {
+        status: 'success',
+        response: `This is a placeholder response for your prompt: "${userPrompt}". The /generate endpoint needs to be implemented in the backend.`,
+      };
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const tableData = parseTableFromText(data.response);
+      const botMessage = tableData
+        ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
+        : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
 
-      const data = await response.json();
-      if (data.status === 'success' && data.response) {
-        const tableData = parseTableFromText(data.response);
-        const botMessage = tableData
-          ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
-          : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
-
-        const updatedSessionWithBot = {
-          ...updatedSession,
-          messages: [...updatedSession.messages, botMessage],
-        };
-        setChatSessions((prev) =>
-          prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
-        );
-        setCurrentSession(updatedSessionWithBot);
-      } else {
-        const errorMessage = { type: 'text', data: `Error: ${data.error || 'Failed to generate response'}`, raw: data.error, sender: 'bot', error: true };
-        const updatedSessionWithError = {
-          ...updatedSession,
-          messages: [...updatedSession.messages, errorMessage],
-        };
-        setChatSessions((prev) =>
-          prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
-        );
-        setCurrentSession(updatedSessionWithError);
-      }
+      const updatedSessionWithBot = {
+        ...updatedSession,
+        messages: [...updatedSession.messages, botMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
+      );
+      setCurrentSession(updatedSessionWithBot);
     } catch (error) {
       const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
       const updatedSessionWithError = {
@@ -212,49 +196,25 @@ function App() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('prompt', 'Process the uploaded file');
-      formData.append('model', selectedModel);
-      formData.append('max_new_tokens', 500);
+      // Placeholder response for file upload
+      const data = {
+        status: 'success',
+        response: `This is a placeholder response for the uploaded file: "${file.name}". The /generate endpoint needs to be implemented in the backend to process files.`,
+      };
 
-      const response = await fetch(`${API_URL}/generate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const tableData = parseTableFromText(data.response);
+      const botMessage = tableData
+        ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
+        : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-      const data = await response.json();
-      if (data.status === 'success' && data.response) {
-        const tableData = parseTableFromText(data.response);
-        const botMessage = tableData
-          ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
-          : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
-
-        const updatedSessionWithBot = {
-          ...updatedSession,
-          messages: [...updatedSession.messages, botMessage],
-        };
-        setChatSessions((prev) =>
-          prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
-        );
-        setCurrentSession(updatedSessionWithBot);
-      } else {
-        const errorMessage = { type: 'text', data: `Error: ${data.error || 'Failed to generate response'}`, raw: data.error, sender: 'bot', error: true };
-        const updatedSessionWithError = {
-          ...updatedSession,
-          messages: [...updatedSession.messages, errorMessage],
-        };
-        setChatSessions((prev) =>
-          prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
-        );
-        setCurrentSession(updatedSessionWithError);
-      }
+      const updatedSessionWithBot = {
+        ...updatedSession,
+        messages: [...updatedSession.messages, botMessage],
+      };
+      setChatSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
+      );
+      setCurrentSession(updatedSessionWithBot);
     } catch (error) {
       const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
       const updatedSessionWithError = {
@@ -360,6 +320,12 @@ function App() {
     const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
     return new Date(timestamp) >= sevenDaysAgo;
   };
+
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   return (
     <div className="app">
@@ -475,7 +441,17 @@ function App() {
             </div>
             <div className="profile-section">
               <button className="share-btn">🔗</button>
-              <span className="profile-pic">{user?.profilePic || '👤'}</span>
+              {user?.profilePic ? (
+                <img
+                  src={`data:image/jpeg;base64,${user.profilePic}`}
+                  alt="Profile"
+                  className="profile-pic"
+                  style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                  onError={(e) => (e.target.src = 'https://via.placeholder.com/40')}
+                />
+              ) : (
+                <span className="profile-pic">👤</span>
+              )}
               <span className="profile-name">{user?.name || 'Guest'}</span>
               <button
                 className="logout-btn"
@@ -614,6 +590,21 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<ChatApp />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://login-1-8dx3.onrender.com';
+const API_URL = 'https://login-s0mj.onrender.com';
 
 const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [profilePic, setProfilePic] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
@@ -20,17 +21,24 @@ const Signup = () => {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      if (profilePic) {
+        formData.append('profile_pic', profilePic);
+      }
+
       const response = await fetch(`${API_URL}/signup`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: formData,
       });
 
       if (!response.ok) throw new Error('Signup failed');
 
       const data = await response.json();
-      if (data.status === 'success' && data.token && data.user) {
-        login(data.user, data.token);
+      if (data.status === 'success') {
+        login(data.user, null); // No token in backend response
         navigate('/');
       } else {
         setError(data.error || 'Failed to create account');
@@ -93,6 +101,18 @@ const Signup = () => {
               className="form-input"
               placeholder="Enter your password"
               required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="profilePic">
+              Profile Picture (optional)
+            </label>
+            <input
+              type="file"
+              id="profilePic"
+              accept="image/*"
+              onChange={(e) => setProfilePic(e.target.files[0])}
+              className="form-input"
             />
           </div>
           {error && <p className="form-error">{error}</p>}
