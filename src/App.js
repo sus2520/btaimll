@@ -8,7 +8,7 @@ import ForgotPassword from './ForgotPassword';
 import './App.css';
 
 
-const API_URL = 'https://login-1-8dx3.onrender.com'; 
+const API_URL = 'https://1950-216-81-248-115.ngrok-free.app'; 
 
 function ChatApp() {
   const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
