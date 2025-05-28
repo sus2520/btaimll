@@ -1,24 +1,21 @@
 import React, { useState, useRef, useContext } from 'react';
-import { useNavigate, Routes, Route, BrowserRouter as Router } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { AuthContext, AuthProvider } from './index';
-import Login from './Login';
-import Signup from './Signup';
-import ForgotPassword from './ForgotPassword';
+import { AuthContext } from './index';
 import './App.css';
 
+const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
+const BOT_API_URL = 'https://1950-216-81-248-115.ngrok-free.app';
 
-const API_URL = 'https://1950-216-81-248-115.ngrok-free.app'; 
-
-function ChatApp() {
-  const [chatSessions, setChatSessions] = useState([]); // List of chat sessions
-  const [currentSession, setCurrentSession] = useState(null); // Current active session
+function App() {
+  const [chatSessions, setChatSessions] = useState([]);
+  const [currentSession, setCurrentSession] = useState(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('basic'); // Default to basic
-  const [editingMessageIndex, setEditingMessageIndex] = useState(null); // Track message being edited
+  const [selectedModel, setSelectedModel] = useState('basic');
+  const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -32,10 +29,8 @@ function ChatApp() {
     recognition.lang = 'en-US';
   }
 
-  // Function to parse Markdown tables from text
   const parseTableFromText = (text) => {
     if (!text || typeof text !== 'string') return null;
-
     const lines = text.split('\n').filter(line => line.trim() !== '');
     let headers = null;
     const rows = [];
@@ -49,7 +44,7 @@ function ChatApp() {
           headers = parts;
           isTable = true;
           if (i + 1 < lines.length && lines[i + 1].match(/^\|[-:\s|]+\|$/)) {
-            i++; // Skip separator row
+            i++;
           }
         } else {
           const row = parts;
@@ -59,15 +54,11 @@ function ChatApp() {
         }
       }
     }
-
     return isTable && headers && rows.length > 0 ? { headers, rows } : null;
   };
 
-  // Function to download table as CSV
   const downloadTableAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
-
-    // Escape CSV values (handle commas, quotes, etc.)
     const escapeCSV = (value) => {
       if (typeof value !== 'string') return value;
       if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -75,15 +66,11 @@ function ChatApp() {
       }
       return value;
     };
-
-    // Create CSV content
     const csvRows = [
-      headers.map(escapeCSV).join(','), // Header row
-      ...rows.map(row => row.map(escapeCSV).join(',')) // Data rows
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
     ];
     const csvContent = csvRows.join('\n');
-
-    // Create a Blob and trigger download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -133,20 +120,31 @@ function ChatApp() {
       };
     }
 
-    setChatSessions((prev) =>
-      prev.map((s) => (s.id === session.id ? updatedSession : s))
-    );
+    setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
     setCurrentSession(updatedSession);
     const userPrompt = input;
     setInput('');
     setLoading(true);
 
     try {
-      // Placeholder response since /generate endpoint is not implemented
-      const data = {
-        status: 'success',
-        response: `This is a placeholder response for your prompt: "${userPrompt}". The /generate endpoint needs to be implemented in the backend.`,
-      };
+      const response = await fetch(`${BOT_API_URL}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: userPrompt,
+          model: selectedModel,
+          userEmail: user.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bot backend error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 'success') {
+        throw new Error(data.error || 'Failed to generate response');
+      }
 
       const tableData = parseTableFromText(data.response);
       const botMessage = tableData
@@ -157,9 +155,7 @@ function ChatApp() {
         ...updatedSession,
         messages: [...updatedSession.messages, botMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s)));
       setCurrentSession(updatedSessionWithBot);
     } catch (error) {
       const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
@@ -167,9 +163,7 @@ function ChatApp() {
         ...updatedSession,
         messages: [...updatedSession.messages, errorMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
       setCurrentSession(updatedSessionWithError);
     } finally {
       setLoading(false);
@@ -190,18 +184,29 @@ function ChatApp() {
       ...session,
       messages: [...session.messages, newMessage],
     };
-    setChatSessions((prev) =>
-      prev.map((s) => (s.id === session.id ? updatedSession : s))
-    );
+    setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
     setCurrentSession(updatedSession);
     setLoading(true);
 
     try {
-      // Placeholder response for file upload
-      const data = {
-        status: 'success',
-        response: `This is a placeholder response for the uploaded file: "${file.name}". The /generate endpoint needs to be implemented in the backend to process files.`,
-      };
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('model', selectedModel);
+      formData.append('userEmail', user.email);
+
+      const response = await fetch(`${BOT_API_URL}/generate`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bot backend error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 'success') {
+        throw new Error(data.error || 'Failed to process file');
+      }
 
       const tableData = parseTableFromText(data.response);
       const botMessage = tableData
@@ -212,9 +217,7 @@ function ChatApp() {
         ...updatedSession,
         messages: [...updatedSession.messages, botMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s)));
       setCurrentSession(updatedSessionWithBot);
     } catch (error) {
       const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
@@ -222,9 +225,7 @@ function ChatApp() {
         ...updatedSession,
         messages: [...updatedSession.messages, errorMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSessionWithError : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
       setCurrentSession(updatedSessionWithError);
     } finally {
       setLoading(false);
@@ -243,9 +244,7 @@ function ChatApp() {
         ...session,
         messages: [...session.messages, errorMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSession : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
       setCurrentSession(updatedSession);
       return;
     }
@@ -270,9 +269,7 @@ function ChatApp() {
         ...session,
         messages: [...session.messages, errorMessage],
       };
-      setChatSessions((prev) =>
-        prev.map((s) => (s.id === session.id ? updatedSession : s))
-      );
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
       setCurrentSession(updatedSession);
       setIsListening(false);
     };
@@ -322,9 +319,8 @@ function ChatApp() {
     return new Date(timestamp) >= sevenDaysAgo;
   };
 
-  // Redirect to login if user is not authenticated
   if (!user) {
-    navigate('/login');
+    navigate('/Login');
     return null;
   }
 
@@ -358,10 +354,7 @@ function ChatApp() {
                   key={session.id}
                   className={`conversation-item ${currentSession && currentSession.id === session.id ? 'active' : ''}`}
                 >
-                  <span
-                    onClick={() => handleSelectSession(session)}
-                    style={{ flex: 1 }}
-                  >
+                  <span onClick={() => handleSelectSession(session)} style={{ flex: 1 }}>
                     {session.title}
                   </span>
                   <button
@@ -373,10 +366,7 @@ function ChatApp() {
                   >
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleDeleteSession(session.id)}
-                    className="delete"
-                  >
+                  <button onClick={() => handleDeleteSession(session.id)} className="delete">
                     Delete
                   </button>
                 </div>
@@ -397,10 +387,7 @@ function ChatApp() {
                   key={session.id}
                   className={`conversation-item ${currentSession && currentSession.id === session.id ? 'active' : ''}`}
                 >
-                  <span
-                    onClick={() => handleSelectSession(session)}
-                    style={{ flex: 1 }}
-                  >
+                  <span onClick={() => handleSelectSession(session)} style={{ flex: 1 }}>
                     {session.title}
                   </span>
                   <button
@@ -412,10 +399,7 @@ function ChatApp() {
                   >
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleDeleteSession(session.id)}
-                    className="delete"
-                  >
+                  <button onClick={() => handleDeleteSession(session.id)} className="delete">
                     Delete
                   </button>
                 </div>
@@ -458,7 +442,7 @@ function ChatApp() {
                 className="logout-btn"
                 onClick={() => {
                   logout();
-                  navigate('/login');
+                  navigate('/Login');
                 }}
               >
                 Logout
@@ -474,7 +458,6 @@ function ChatApp() {
                     const messageType = msg.type || (msg.text ? 'text' : 'unknown');
                     const messageData = msg.data || msg.text || '';
                     const rawData = msg.raw || msg.text || '';
-
                     return (
                       <div
                         key={index}
@@ -561,11 +544,7 @@ function ChatApp() {
               className="prompt-input"
             />
             {editingMessageIndex !== null && (
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={handleCancelEdit}
-              >
+              <button type="button" className="cancel-btn" onClick={handleCancelEdit}>
                 Cancel
               </button>
             )}
@@ -591,21 +570,6 @@ function ChatApp() {
         </div>
       </div>
     </div>
-  );
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/" element={<ChatApp />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
   );
 }
 

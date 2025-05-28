@@ -11,73 +11,38 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [profilePic, setProfilePic] = useState(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState('');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  // Client-side validation for password strength
-  const checkPasswordStrength = (pwd) => {
-    if (pwd.length < 8) return 'Weak';
-    if (!/[A-Z]/.test(pwd) || !/\d/.test(pwd)) return 'Moderate';
-    return 'Strong';
-  };
-
-  const handlePasswordChange = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    setPasswordStrength(checkPasswordStrength(newPassword));
-  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setLoading(true);
-
-    // Client-side validation
-    if (!name.trim()) {
-      setError('Name cannot be empty');
-      setLoading(false);
-      return;
-    }
-
-    if (passwordStrength !== 'Strong') {
-      setError('Password must be at least 8 characters long and contain at least one uppercase letter and one digit');
-      setLoading(false);
-      return;
-    }
-
-    if (profilePic && profilePic.size > 2 * 1024 * 1024) { // 2MB limit
-      setError('Profile picture must be less than 2MB');
-      setLoading(false);
-      return;
-    }
 
     try {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('email', email);
       formData.append('password', password);
-      if (profilePic) {
-        formData.append('profile_pic', profilePic);
-      }
+      if (profilePic) formData.append('profile_pic', profilePic);
 
       const response = await fetch(`${API_URL}/signup`, {
         method: 'POST',
         body: formData,
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.detail || 'Signup failed'); // Use 'detail' from HTTPException
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Signup failed');
       }
 
+      const data = await response.json();
       if (data.status === 'success') {
-        setSuccess('Signup successful! Redirecting to homepage...');
         login(data.user, null);
-        setTimeout(() => navigate('/'), 2000); // Delay redirection for user feedback
+        navigate('/');
+      } else {
+        setError(data.error || 'Signup failed');
       }
     } catch (err) {
       setError(err.message || 'An error occurred');
@@ -87,7 +52,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-container">
+    <div className="login-container">
       <div className="form-card">
         <img
           src="/logo.png"
@@ -133,45 +98,37 @@ const Signup = () => {
               type="password"
               id="password"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={(e) => setPassword(e.target.value)}
               className="form-input"
               placeholder="Enter your password"
               required
             />
-            {password && (
-              <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
-                Password Strength: {passwordStrength}
-              </p>
-            )}
           </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="profilePic">
-              Profile Picture (optional)
-            </label>
-            <input
-              type="file"
-              id="profilePic"
-              accept="image/*"
-              onChange={(e) => setProfilePic(e.target.files[0])}
-              className="form-input"
-            />
-          </div>
-          {error && <p className="form-error">{error}</p>}
-          {success && <p className="form-success">{success}</p>}
-          <button
-            type="submit"
-            className="form-button"
-            disabled={loading || passwordStrength !== 'Strong'}
-          >
-            {loading ? 'Signing up...' : 'Sign Up'}
-          </button>
-        </form>
-        <p className="form-link">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
+          <div>
+          <div className
+            className="form-group">
+              <label className="form-label" htmlFor="profilePic">
+                Profile Picture
+              </label>
+              <input
+                type="file"
+                id="profile-pic"
+                accept="image/*"
+                onChange={(e) => setProfilePic(e.target.files[0])}
+                className="form-input"
+              />
+            </div>
+            {error && <p className="form-error">{error}</p>}
+            <button type="submit" className="form-button" disabled={loading}>
+              {loading ? 'Signing up...' : 'Sign Up'}
+            </button>
+          </form>
+          <p className="form-link">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
       </div>
-    </div>
-  );
-};
-
-export default Signup;
+    );
+  };
+  
+  export default Signup;

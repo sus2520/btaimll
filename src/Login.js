@@ -29,7 +29,7 @@ const Login = () => {
 
       const data = await response.json();
       if (data.status === 'success') {
-        login(data.user, null); // No token in backend response
+        login(data.user, null);
         navigate('/');
       } else {
         setError(data.error || 'Invalid credentials');
@@ -81,11 +81,7 @@ const Login = () => {
             />
           </div>
           {error && <p className="form-error">{error}</p>}
-          <button
-            type="submit"
-            className="form-button"
-            disabled={loading}
-          >
+          <button type="submit" className="form-button" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>

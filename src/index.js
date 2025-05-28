@@ -4,27 +4,28 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
 import Login from './Login';
 import Signup from './Signup';
+import ForgotPassword from './ForgotPassword';
 import './App.css';
 
-// Authentication context
 export const AuthContext = React.createContext();
 
-export const AuthProvider = ({ children }) => {  // Added export here
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check for stored token on mount
-    const token = localStorage.getItem('token');
+    // Check for stored user on mount
     const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
   const login = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem('token', token);
+    }
   };
 
   const logout = () => {
@@ -40,7 +41,6 @@ export const AuthProvider = ({ children }) => {  // Added export here
   );
 };
 
-// Protected route component
 const ProtectedRoute = ({ children }) => {
   const { user } = React.useContext(AuthContext);
   return user ? children : <Navigate to="/Login" />;
@@ -52,6 +52,7 @@ const Root = () => (
       <Routes>
         <Route path="/Login" element={<Login />} />
         <Route path="/Signup" element={<Signup />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route
           path="/"
           element={
