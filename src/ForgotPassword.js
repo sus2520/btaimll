@@ -8,8 +8,8 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const handleResetPassword = async (e) => {
@@ -22,7 +22,7 @@ const ForgotPassword = () => {
       const response = await fetch(`${API_URL}/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword: newPassword }),
+        body: JSON.stringify({ email, new_password: newPassword }), // Match backend's expected key
       });
 
       if (!response.ok) {
@@ -33,7 +33,7 @@ const ForgotPassword = () => {
       const data = await response.json();
       if (data.status === 'success') {
         setSuccessMessage('Password updated successfully. Please log in.');
-        setTimeout(() => navigate('/login'), 2000);
+        setTimeout(() => navigate('/Login'), 2000);
       } else {
         setError(data.error || 'Password reset failed');
       }
@@ -84,13 +84,13 @@ const ForgotPassword = () => {
             />
           </div>
           {error && <p className="form-error">{error}</p>}
-          {success <p className="form-success">{success}</p>}
+          {successMessage && <p className="form-success">{successMessage}</p>}
           <button type="submit" className="form-button" disabled={loading}>
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
         <p className="form-link">
-          Back to <Link to="/login">Login</Link>
+          Back to <Link to="/Login">Login</Link>
         </p>
       </div>
     </div>

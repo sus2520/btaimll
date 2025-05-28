@@ -104,31 +104,29 @@ const Signup = () => {
               required
             />
           </div>
-          <div>
-          <div className
-            className="form-group">
-              <label className="form-label" htmlFor="profilePic">
-                Profile Picture
-              </label>
-              <input
-                type="file"
-                id="profile-pic"
-                accept="image/*"
-                onChange={(e) => setProfilePic(e.target.files[0])}
-                className="form-input"
-              />
-            </div>
-            {error && <p className="form-error">{error}</p>}
-            <button type="submit" className="form-button" disabled={loading}>
-              {loading ? 'Signing up...' : 'Sign Up'}
-            </button>
-          </form>
-          <p className="form-link">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-        </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="profilePic">
+              Profile Picture
+            </label>
+            <input
+              type="file"
+              id="profilePic"
+              accept="image/*"
+              onChange={(e) => setProfilePic(e.target.files[0])}
+              className="form-input"
+            />
+          </div>
+          {error && <p className="form-error">{error}</p>}
+          <button type="submit" className="form-button" disabled={loading}>
+            {loading ? 'Signing up...' : 'Sign Up'}
+          </button>
+        </form>
+        <p className="form-link">
+          Already have an account? <Link to="/Login">Login</Link>
+        </p>
       </div>
-    );
-  };
-  
-  export default Signup;
+    </div>
+  );
+};
+
+export default Signup;
