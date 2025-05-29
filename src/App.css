@@ -4,14 +4,12 @@
   height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
-  overflow: hidden;
   background-color: #f8fafc;
 }
 
 .main-container {
   display: flex;
   flex: 1;
-  overflow: hidden;
 }
 
 .sidebar {
@@ -157,7 +155,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #FFFFFF;
+  background
+
+-color: #FFFFFF;
 }
 
 .header {
@@ -523,6 +523,32 @@
   background-color: #F8FAFC;
 }
 
+.table-container {
+  position: relative;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #D1D5DB #FFFFFF;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #FFFFFF;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #D1D5DB;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #9CA3AF;
+}
+
 .response-table {
   width: 100%;
   border-collapse: collapse;
@@ -576,14 +602,16 @@
   transition: background-color 0.2s ease;
 }
 
-.table-container {
-  position: relative;
+.table-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .download-btn {
   margin-top: 12px;
   padding: 8px 16px;
-  background-color: #10B981;
+  background-color: #dd8828;
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 600;
@@ -596,15 +624,9 @@
   outline: none;
 }
 
-.table-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-}
-
 .json-view-btn {
   padding: 8px 16px;
-  background-color: #6B7280;
+  background-color: #1e3704;
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 600;
@@ -627,7 +649,7 @@
 }
 
 .json-display {
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
