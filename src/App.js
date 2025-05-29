@@ -535,13 +535,13 @@ function App() {
                 onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
               />
             </button>
-            <input
-              type="text"
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."
+              placeholder={editingMessageIndex !== null ? "Edit your message..." : "Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."}
               disabled={loading}
-              className="prompt-input"
+              className="prompt-textarea"
+              rows="4"
             />
             {editingMessageIndex !== null && (
               <button type="button" className="cancel-btn" onClick={handleCancelEdit}>
