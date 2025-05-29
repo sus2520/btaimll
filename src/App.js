@@ -5,7 +5,7 @@ import { AuthContext } from './index';
 import './App.css';
 
 const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
-const BOT_API_URL = 'https://1950-216-81-248-115.ngrok-free.app';
+const BOT_API_URL = 'https://fullstack-bot.ngrok.app';
 
 function App() {
   const [chatSessions, setChatSessions] = useState([]);
