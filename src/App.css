@@ -1,4 +1,3 @@
-/* App.css */
 .app {
   display: flex;
   flex-direction: column;
@@ -384,52 +383,63 @@
 
 .input-container {
   display: flex;
+  align-items: flex-start;
+  gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid #E5E7EB;
-  align-items: center;
   background-color: #F8FAFC;
-  gap: 12px;
 }
 
-.prompt-input {
+.prompt-textarea {
   flex: 1;
+  height: 100px;
+  max-height: 100px;
+  min-height: 100px;
+  resize: none;
+  overflow-y: auto;
   padding: 12px 16px;
   border: 1px solid #D1D5DB;
   border-radius: 12px;
-  outline: none;
-  color: #1F2937;
   font-size: 15px;
+  font-family: inherit;
+  background: #FFFFFF;
+  color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.prompt-input:focus {
-  border-color: #3B82F6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+.prompt-textarea:disabled {
+  background: #F3F4F6;
+  cursor: not-allowed;
 }
 
-.prompt-input:disabled {
-  background-color: #F3F4F6;
-  cursor: not-allowed;
+.prompt-textarea:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
 }
 
 .attachment-btn,
 .voice-btn,
 .send-btn,
-.cancel-btn {
-  padding: 8px;
+.cancel-btn,
+.download-btn,
+.json-view-btn,
+.close-json-btn {
   border: none;
-  border-radius: 50%;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.attachment-btn {
+  padding: 8px;
+  background-color: #E5E7EB;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.attachment-btn {
-  background-color: #E5E7EB;
 }
 
 .attachment-btn:hover,
@@ -440,7 +450,14 @@
 }
 
 .voice-btn {
+  padding: 8px;
   background-color: #F59E0B;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .voice-btn.listening {
@@ -455,11 +472,10 @@
 }
 
 .send-btn {
+  padding: 12px 24px;
   background-color: #3B82F6;
   color: #FFFFFF;
   border-radius: 12px;
-  padding: 12px 24px;
-  width: auto;
   font-weight: 600;
   font-size: 15px;
 }
@@ -477,11 +493,10 @@
 }
 
 .cancel-btn {
+  padding: 12px 24px;
   background-color: #EF4444;
   color: #FFFFFF;
   border-radius: 12px;
-  padding: 12px 24px;
-  width: auto;
   font-weight: 600;
   font-size: 15px;
 }
@@ -570,12 +585,8 @@
   padding: 8px 16px;
   background-color: #10B981;
   color: #FFFFFF;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
 }
 
 .download-btn:hover,
@@ -583,6 +594,82 @@
   background-color: #059669;
   transform: scale(1.02);
   outline: none;
+}
+
+.table-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.json-view-btn {
+  padding: 8px 16px;
+  background-color: #6B7280;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.json-view-btn:hover,
+.json-view-btn:focus {
+  background-color: #4B5563;
+  transform: scale(1.02);
+  outline: none;
+}
+
+.json-container {
+  margin-top: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background: #F1F5F9;
+  padding: 12px;
+  position: relative;
+}
+
+.json-display {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #1F2937;
+  white-space: pre-wrap;
+}
+
+.close-json-btn {
+  padding: 8px 16px;
+  background-color: #EF4444;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.close-json-btn:hover,
+.close-json-btn:focus {
+  background-color: #DC2626;
+  transform: scale(1.02);
+  outline: none;
+}
+
+.json-display::-webkit-scrollbar {
+  width: 8px;
+}
+
+.json-display::-webkit-scrollbar-track {
+  background: #FFFFFF;
+}
+
+.json-display::-webkit-scrollbar-thumb {
+  background-color: #D1D5DB;
+  border-radius: 4px;
+}
+
+.json-display::-webkit-scrollbar-thumb:hover {
+  background-color: #9CA3AF;
 }
 
 /* Styles for Login and Signup pages */
@@ -608,8 +695,7 @@
   height: 48px;
   margin-bottom: 24px;
   display: block;
-  margin-left: auto;
-  margin-right: auto;
+  UNAVAILABLE
 }
 
 .form-title {
@@ -726,7 +812,7 @@
     gap: 8px;
   }
 
-  .prompt-input {
+  .prompt-textarea {
     padding: 10px 12px;
     font-size: 14px;
   }
@@ -805,7 +891,7 @@
     gap: 6px;
   }
 
-  .prompt-input {
+  .prompt-textarea {
     padding: 8px 10px;
     font-size: 13px;
   }
@@ -855,71 +941,4 @@
     font-size: 15px;
     padding: 10px;
   }
-}
-.input-container {
-  display: flex;
-  align-items: flex-start; /* Align items at the top for textarea */
-  gap: 10px;
-  padding: 10px;
-  background: #f5f5f5; /* Light background, adjust for theme */
-  border-top: 1px solid #ddd;
-}
-
-.prompt-textarea {
-  flex: 1;
-  height: 100px; /* Fixed height */
-  max-height: 100px;
-  min-height: 100px;
-  resize: none; /* Disable manual resizing */
-  overflow-y: auto; /* Enable vertical scrolling */
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-  background: #fff;
-  color: #333;
-}
-
-.prompt-textarea:disabled {
-  background: #e0e0e0;
-  cursor: not-allowed;
-}
-
-.prompt-textarea:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-}
-
-.attachment-btn, .voice-btn, .send-btn, .cancel-btn {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.attachment-btn img, .voice-btn img {
-  width: 24px;
-  height: 24px;
-}
-
-.send-btn {
-  background: #007bff;
-  color: #fff;
-}
-
-.send-btn:disabled {
-  background: #cccccc;
-  cursor: not-allowed;
-}
-
-.cancel-btn {
-  background: #dc3545;
-  color: #fff;
-}
-
-.voice-btn.listening {
-  background: #28a745;
 }

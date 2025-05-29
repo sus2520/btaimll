@@ -16,6 +16,7 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
+  const [showJsonView, setShowJsonView] = useState(null); // New state for JSON view
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -80,6 +81,16 @@ function App() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const convertTableToJson = (tableData) => {
+    const { headers, rows } = tableData;
+    return rows.map(row => 
+      headers.reduce((obj, header, index) => {
+        obj[header] = row[index];
+        return obj;
+      }, {})
+    );
   };
 
   const startNewSession = (title = 'Untitled Chat') => {
@@ -483,12 +494,33 @@ function App() {
                                 ))}
                               </tbody>
                             </table>
-                            <button
-                              className="download-btn"
-                              onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
-                            >
-                              Download Table
-                            </button>
+                            <div className="table-actions">
+                              <button
+                                className="download-btn"
+                                onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
+                              >
+                                Download Table
+                              </button>
+                              <button
+                                className="json-view-btn"
+                                onClick={() => setShowJsonView(showJsonView === index ? null : index)}
+                              >
+                                {showJsonView === index ? 'Hide JSON' : 'JSON View'}
+                              </button>
+                            </div>
+                            {showJsonView === index && (
+                              <div className="json-container">
+                                <pre className="json-display">
+                                  {JSON.stringify(convertTableToJson(messageData), null, 2)}
+                                </pre>
+                                <button
+                                  className="close-json-btn"
+                                  onClick={() => setShowJsonView(null)}
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <ReactMarkdown>{messageData}</ReactMarkdown>
