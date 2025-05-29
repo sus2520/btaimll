@@ -291,6 +291,26 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  overflow-y: auto; /* Ensure the messages container is scrollable */
+}
+
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: #FFFFFF;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background-color: #D1D5DB;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background-color: #9CA3AF;
 }
 
 .message {
@@ -647,7 +667,7 @@
 }
 
 .json-display {
-  max-height: 800px;
+  max-height: 2500px; /* Updated to 2500px as requested */
   overflow-y: auto;
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
@@ -657,22 +677,6 @@
   font-size: 14px;
   color: #1F2937;
   white-space: pre-wrap;
-}
-
-.close-json-btn {
-  padding: 8px 16px;
-  background-color: #EF4444;
-  color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 600;
-  margin-top: 12px;
-}
-
-.close-json-btn:hover,
-.close-json-btn:focus {
-  background-color: #DC2626;
-  transform: scale(1.02);
-  outline: none;
 }
 
 .json-display::-webkit-scrollbar {
@@ -690,6 +694,22 @@
 
 .json-display::-webkit-scrollbar-thumb:hover {
   background-color: #9CA3AF;
+}
+
+.close-json-btn {
+  padding: 8px 16px;
+  background-color: #EF4444;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.close-json-btn:hover,
+.close-json-btn:focus {
+  background-color: #DC2626;
+  transform: scale(1.02);
+  outline: none;
 }
 
 /* Styles for Login and Signup pages */
