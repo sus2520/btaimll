@@ -17,34 +17,19 @@
   background: linear-gradient(180deg, #1E3A8A, #2B4EAD);
   padding: 24px;
   border-right: 1px solid #60A5FA;
-  overflow-y: auto;
   color: #FFFFFF;
-  scrollbar-width: thin;
-  scrollbar-color: #60A5FA #1E3A8A;
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: #1E3A8A;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background-color: #60A5FA;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background-color: #3B82F6;
+  height: 100%; /* Take full height of the container */
+  display: flex;
+  flex-direction: column;
+  /* Removed overflow-y: auto to disable scrolling */
 }
 
 .brand-section {
   display: flex;
   align-items: center;
   margin-bottom: 24px;
+  /* Removed sticky positioning */
+  padding: 0 0 12px 0;
 }
 
 .sidebar-logo {
@@ -60,6 +45,33 @@
   color: #FFFFFF;
   margin: 0;
   letter-spacing: 0.5px;
+}
+
+.conversations {
+  flex: 1; /* Take remaining space */
+  /* Removed sticky positioning */
+  /* Added max-height to ensure it fits within the sidebar */
+  max-height: calc(100% - 120px); /* Adjust based on brand-section and renew-btn height */
+  overflow-y: auto; /* Allow internal scrolling if needed */
+  padding-bottom: 24px;
+}
+
+.conversations::-webkit-scrollbar {
+  width: 8px;
+}
+
+.conversations::-webkit-scrollbar-track {
+  background: #1E3A8A;
+}
+
+.conversations::-webkit-scrollbar-thumb {
+  background-color: #60A5FA;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.conversations::-webkit-scrollbar-thumb:hover {
+  background-color: #3B82F6;
 }
 
 .conversations h3 {
@@ -142,6 +154,7 @@
   font-weight: 600;
   font-size: 15px;
   transition: all 0.3s ease;
+  /* Removed sticky positioning */
 }
 
 .renew-btn:hover,
@@ -292,7 +305,7 @@
   flex-direction: column;
   gap: 12px;
   flex: 1;
-  overflow-y: auto; /* Ensure the messages container is scrollable */
+  overflow-y: auto;
 }
 
 .messages::-webkit-scrollbar {
@@ -667,7 +680,7 @@
 }
 
 .json-display {
-  max-height: 2500px; /* Updated to 2500px as requested */
+  max-height: 2500px;
   overflow-y: auto;
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
