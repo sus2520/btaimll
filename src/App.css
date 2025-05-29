@@ -647,7 +647,7 @@
 }
 
 .json-display {
-  max-height: 400px;
+  max-height: 800px;
   overflow-y: auto;
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
