@@ -16,7 +16,7 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
-  const [showJsonView, setShowJsonView] = useState(null); // New state for JSON view
+  const [showJsonView, setShowJsonView] = useState(null);
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -58,6 +58,15 @@ function App() {
     return isTable && headers && rows.length > 0 ? { headers, rows } : null;
   };
 
+  const isJsonString = (str) => {
+    try {
+      JSON.parse(str);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const downloadTableAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
     const escapeCSV = (value) => {
@@ -77,6 +86,19 @@ function App() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `${fileName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadJson = (jsonData, fileName = 'data') => {
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${fileName}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -157,10 +179,15 @@ function App() {
         throw new Error(data.error || 'Failed to generate response');
       }
 
+      let botMessage;
       const tableData = parseTableFromText(data.response);
-      const botMessage = tableData
-        ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
-        : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+      if (tableData) {
+        botMessage = { type: 'table', data: tableData, raw: data.response, sender: 'bot' };
+      } else if (isJsonString(data.response)) {
+        botMessage = { type: 'json', data: JSON.parse(data.response), raw: data.response, sender: 'bot' };
+      } else {
+        botMessage = { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+      }
 
       const updatedSessionWithBot = {
         ...updatedSession,
@@ -219,10 +246,15 @@ function App() {
         throw new Error(data.error || 'Failed to process file');
       }
 
+      let botMessage;
       const tableData = parseTableFromText(data.response);
-      const botMessage = tableData
-        ? { type: 'table', data: tableData, raw: data.response, sender: 'bot' }
-        : { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+      if (tableData) {
+        botMessage = { type: 'table', data: tableData, raw: data.response, sender: 'bot' };
+      } else if (isJsonString(data.response)) {
+        botMessage = { type: 'json', data: JSON.parse(data.response), raw: data.response, sender: 'bot' };
+      } else {
+        botMessage = { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+      }
 
       const updatedSessionWithBot = {
         ...updatedSession,
@@ -521,6 +553,20 @@ function App() {
                                 </button>
                               </div>
                             )}
+                          </div>
+                        ) : messageType === 'json' ? (
+                          <div className="json-container">
+                            <pre className="json-display">
+                              {JSON.stringify(messageData, null, 2)}
+                            </pre>
+                            <div className="table-actions">
+                              <button
+                                className="download-btn"
+                                onClick={() => downloadJson(messageData, `data_${index}`)}
+                              >
+                                Download JSON
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <ReactMarkdown>{messageData}</ReactMarkdown>
