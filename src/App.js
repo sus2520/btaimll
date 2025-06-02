@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AuthContext } from './index';
@@ -20,6 +20,32 @@ function App() {
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Load chat sessions from localStorage on mount
+  useEffect(() => {
+    const savedSessions = localStorage.getItem('chatSessions');
+    if (savedSessions) {
+      const parsedSessions = JSON.parse(savedSessions);
+      // Filter sessions to include only those from today
+      const today = new Date();
+      const todaySessions = parsedSessions.filter((session) => {
+        const sessionDate = new Date(session.timestamp);
+        return (
+          sessionDate.getDate() === today.getDate() &&
+          sessionDate.getMonth() === today.getMonth() &&
+          sessionDate.getFullYear() === today.getFullYear()
+        );
+      });
+      setChatSessions(todaySessions);
+    }
+  }, []);
+
+  // Save chat sessions to localStorage whenever they change
+  useEffect(() => {
+    if (chatSessions.length > 0) {
+      localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+    }
+  }, [chatSessions]);
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
@@ -118,9 +144,9 @@ function App() {
   const startNewSession = (title = 'Untitled Chat') => {
     const newSession = {
       id: Date.now(),
-      title,
+      title: title.length > 30 ? title.slice(0, 27) + '...' : title,
       messages: [],
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
     setChatSessions((prev) => [...prev, newSession]);
     setCurrentSession(newSession);
@@ -133,7 +159,8 @@ function App() {
 
     let session = currentSession;
     if (!session) {
-      session = startNewSession(input.length > 30 ? input.slice(0, 27) + '...' : input);
+      // Use the prompt as the session title
+      session = startNewSession(input);
     }
 
     let updatedSession;
@@ -320,10 +347,12 @@ function App() {
   };
 
   const handleDeleteSession = (sessionId) => {
-    setChatSessions(chatSessions.filter((session) => session.id !== sessionId));
+    const updatedSessions = chatSessions.filter((session) => session.id !== sessionId);
+    setChatSessions(updatedSessions);
     if (currentSession && currentSession.id === sessionId) {
       setCurrentSession(null);
     }
+    localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
   };
 
   const handleEditPrompt = (data, index) => {
@@ -338,11 +367,11 @@ function App() {
 
   const handleUpdateSessionTitle = (sessionId, newTitle) => {
     const updatedSessions = chatSessions.map((session) =>
-      session.id === sessionId ? { ...session, title: newTitle } : session
+      session.id === sessionId ? { ...session, title: newTitle.length > 30 ? newTitle.slice(0, 27) + '...' : newTitle } : session
     );
     setChatSessions(updatedSessions);
     if (currentSession && currentSession.id === sessionId) {
-      setCurrentSession({ ...currentSession, title: newTitle });
+      setCurrentSession({ ...currentSession, title: newTitle.length > 30 ? newTitle.slice(0, 27) + '...' : newTitle });
     }
   };
 
@@ -545,12 +574,20 @@ function App() {
                                 <pre className="json-display">
                                   {JSON.stringify(convertTableToJson(messageData), null, 2)}
                                 </pre>
-                                <button
-                                  className="close-json-btn"
-                                  onClick={() => setShowJsonView(null)}
-                                >
-                                  Close
-                                </button>
+                                <div className="table-actions">
+                                  <button
+                                    className="download-btn"
+                                    onClick={() => downloadJson(convertTableToJson(messageData), `table_${index}`)}
+                                  >
+                                    Download JSON
+                                  </button>
+                                  <button
+                                    className="close-json-btn"
+                                    onClick={() => setShowJsonView(null)}
+                                  >
+                                    Close
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>

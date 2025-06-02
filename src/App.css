@@ -18,17 +18,15 @@
   padding: 24px;
   border-right: 1px solid #60A5FA;
   color: #FFFFFF;
-  height: 100%; /* Take full height of the container */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  /* Removed overflow-y: auto to disable scrolling */
 }
 
 .brand-section {
   display: flex;
   align-items: center;
   margin-bottom: 24px;
-  /* Removed sticky positioning */
   padding: 0 0 12px 0;
 }
 
@@ -48,11 +46,9 @@
 }
 
 .conversations {
-  flex: 1; /* Take remaining space */
-  /* Removed sticky positioning */
-  /* Added max-height to ensure it fits within the sidebar */
-  max-height: calc(100% - 120px); /* Adjust based on brand-section and renew-btn height */
-  overflow-y: auto; /* Allow internal scrolling if needed */
+  flex: 1;
+  max-height: calc(100% - 120px);
+  overflow-y: auto;
   padding-bottom: 24px;
 }
 
@@ -154,7 +150,6 @@
   font-weight: 600;
   font-size: 15px;
   transition: all 0.3s ease;
-  /* Removed sticky positioning */
 }
 
 .renew-btn:hover,
@@ -403,7 +398,7 @@
 @keyframes pulse {
   0% { opacity: 1; }
   50% { opacity: 0.4; }
-  100% { opacity: 1; }
+  100% { foreground-color: #1e3704; }
 }
 
 .message.bot.error {
@@ -640,27 +635,34 @@
 }
 
 .download-btn {
-  margin-top: 12px;
   padding: 8px 16px;
-  background-color: #dd8828;
+  background-color: #4CAF50;
   color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .download-btn:hover,
 .download-btn:focus {
-  background-color: #059669;
+  background-color: #45A049;
   transform: scale(1.02);
   outline: none;
 }
 
 .json-view-btn {
   padding: 8px 16px;
-  background-color: #1e3704;
+  background-color: #6B7280;
   color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .json-view-btn:hover,
@@ -680,7 +682,7 @@
 }
 
 .json-display {
-  max-height: 2500px;
+  max-height: 300px;
   overflow-y: auto;
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
@@ -713,9 +715,12 @@
   padding: 8px 16px;
   background-color: #EF4444;
   color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  margin-top: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .close-json-btn:hover,
@@ -725,7 +730,6 @@
   outline: none;
 }
 
-/* Styles for Login and Signup pages */
 .login-container,
 .signup-container {
   min-height: 100vh;
