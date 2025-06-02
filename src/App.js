@@ -43,6 +43,8 @@ function App() {
   useEffect(() => {
     if (chatSessions.length > 0) {
       localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+    } else {
+      localStorage.removeItem('chatSessions');
     }
   }, [chatSessions]);
 
@@ -155,20 +157,7 @@ function App() {
       messages: [],
       timestamp: new Date().toISOString(),
     };
-    setChatSessions((prev) => {
-      // Prevent duplicate sessions with same title
-      const filteredSessions = prev.filter(s => {
-        const sessionDate = new Date(s.timestamp);
-        const today = new Date();
-        return !(
-          s.title === newSession.title &&
-          sessionDate.getDate() === today.getDate() &&
-          sessionDate.getMonth() === today.getMonth() &&
-          sessionDate.getFullYear() === today.getFullYear()
-        );
-      });
-      return [...filteredSessions, newSession];
-    });
+    setChatSessions((prev) => [...prev, newSession]);
     setCurrentSession(newSession);
     return newSession;
   };
@@ -178,7 +167,7 @@ function App() {
     if (input.trim() === '') return;
 
     let session = currentSession;
-    if (!session) {
+    if (!session || session.messages.length === 0) {
       session = startNewSession(input);
     }
 
@@ -259,7 +248,7 @@ function App() {
     if (!file) return;
 
     let session = currentSession;
-    if (!session) {
+    if (!session || session.messages.length === 0) {
       session = startNewSession(`Uploaded: ${file.name}`);
     }
 
@@ -326,7 +315,7 @@ function App() {
     if (!recognition) {
       const errorMessage = { type: 'text', data: 'Voice input not supported.', raw: 'Voice input not supported.', sender: 'bot', error: true };
       let session = currentSession;
-      if (!session) {
+      if (!session || session.messages.length === 0) {
         session = startNewSession('Voice Input Error');
       }
       const updatedSession = {
@@ -345,13 +334,19 @@ function App() {
     setIsListening(true);
     recognition.start();
     recognition.onresult = (event) => {
-      setInput(event.results[0][0].transcript);
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
       setIsListening(false);
+      // Start a new session if none exists or current session is empty
+      let session = currentSession;
+      if (!session || session.messages.length === 0) {
+        session = startNewSession(transcript);
+      }
     };
     recognition.onerror = (event) => {
       const errorMessage = { type: 'text', data: `Voice input error: ${event.error}`, raw: `Voice input error: ${event.error}`, sender: 'bot', error: true };
       let session = currentSession;
-      if (!session) {
+      if (!session || session.messages.length === 0) {
         session = startNewSession('Voice Input Error');
       }
       const updatedSession = {
