@@ -26,7 +26,6 @@ function App() {
     const savedSessions = localStorage.getItem('chatSessions');
     if (savedSessions) {
       const parsedSessions = JSON.parse(savedSessions);
-      // Filter sessions to include only those from today
       const today = new Date();
       const todaySessions = parsedSessions.filter((session) => {
         const sessionDate = new Date(session.timestamp);
@@ -159,7 +158,6 @@ function App() {
 
     let session = currentSession;
     if (!session) {
-      // Use the prompt as the session title
       session = startNewSession(input);
     }
 
@@ -523,7 +521,7 @@ function App() {
           </header>
           <div className="main-chat">
             {currentSession ? (
-              <div>
+              <div className="chat-content">
                 <h2>{currentSession.title}</h2>
                 <div className="messages">
                   {currentSession.messages.map((msg, index) => {
