@@ -26,16 +26,7 @@ function App() {
     const savedSessions = localStorage.getItem('chatSessions');
     if (savedSessions) {
       const parsedSessions = JSON.parse(savedSessions);
-      const today = new Date();
-      const todaySessions = parsedSessions.filter((session) => {
-        const sessionDate = new Date(session.timestamp);
-        return (
-          sessionDate.getDate() === today.getDate() &&
-          sessionDate.getMonth() === today.getMonth() &&
-          sessionDate.getFullYear() === today.getFullYear()
-        );
-      });
-      setChatSessions(todaySessions);
+      setChatSessions(parsedSessions);
     }
   }, []);
 
@@ -337,7 +328,6 @@ function App() {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
-      // Start a new session if none exists or current session is empty
       let session = currentSession;
       if (!session || session.messages.length === 0) {
         session = startNewSession(transcript);
@@ -399,10 +389,24 @@ function App() {
     { value: 'ultra', label: 'Ultra (LLaMA 3 70B)' },
   ];
 
+  const isToday = (timestamp) => {
+    const today = new Date();
+    const sessionDate = new Date(timestamp);
+    return (
+      sessionDate.getDate() === today.getDate() &&
+      sessionDate.getMonth() === today.getMonth() &&
+      sessionDate.getFullYear() === today.getFullYear()
+    );
+  };
+
   const isWithinLast7Days = (timestamp) => {
     const now = new Date();
-    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
-    return new Date(timestamp) >= sevenDaysAgo;
+    const sessionDate = new Date(timestamp);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999); // End of yesterday
+
+    // Session should be between 7 days ago and the end of yesterday
+    return sessionDate >= sevenDaysAgo && sessionDate <= yesterdayEnd;
   };
 
   if (!user) {
@@ -426,15 +430,7 @@ function App() {
           <div className="conversations">
             <h3>Today</h3>
             {chatSessions
-              .filter((session) => {
-                const today = new Date();
-                const sessionDate = new Date(session.timestamp);
-                return (
-                  sessionDate.getDate() === today.getDate() &&
-                  sessionDate.getMonth() === today.getMonth() &&
-                  sessionDate.getFullYear() === today.getFullYear()
-                );
-              })
+              .filter((session) => isToday(session.timestamp))
               .map((session) => (
                 <div
                   key={session.id}
@@ -459,15 +455,7 @@ function App() {
               ))}
             <h3>Previous 7 Days</h3>
             {chatSessions
-              .filter(
-                (session) =>
-                  isWithinLast7Days(session.timestamp) &&
-                  !(
-                    new Date(session.timestamp).getDate() === new Date().getDate() &&
-                    new Date(session.timestamp).getMonth() === new Date().getMonth() &&
-                    new Date(session.timestamp).getFullYear() === new Date().getFullYear()
-                  )
-              )
+              .filter((session) => isWithinLast7Days(session.timestamp))
               .map((session) => (
                 <div
                   key={session.id}
