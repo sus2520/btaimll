@@ -46,6 +46,14 @@ function App() {
     }
   }, [chatSessions]);
 
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    const messagesDiv = document.querySelector('.messages');
+    if (messagesDiv) {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  }, [currentSession?.messages]);
+
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
@@ -147,7 +155,20 @@ function App() {
       messages: [],
       timestamp: new Date().toISOString(),
     };
-    setChatSessions((prev) => [...prev, newSession]);
+    setChatSessions((prev) => {
+      // Prevent duplicate sessions with same title
+      const filteredSessions = prev.filter(s => {
+        const sessionDate = new Date(s.timestamp);
+        const today = new Date();
+        return !(
+          s.title === newSession.title &&
+          sessionDate.getDate() === today.getDate() &&
+          sessionDate.getMonth() === today.getMonth() &&
+          sessionDate.getFullYear() === today.getFullYear()
+        );
+      });
+      return [...filteredSessions, newSession];
+    });
     setCurrentSession(newSession);
     return newSession;
   };
