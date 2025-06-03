@@ -2,7 +2,6 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AuthContext } from './index';
-import * as XLSX from 'xlsx';
 import './App.css';
 
 const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
@@ -94,13 +93,29 @@ function App() {
     }
   };
 
-  const downloadTableAsXLS = (tableData, fileName = 'table') => {
+  const downloadTableAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
-    const worksheetData = [headers, ...rows];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    const escapeCSV = (value) => {
+      if (typeof value !== 'string') return value;
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+    const csvRows = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ];
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${fileName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const downloadJson = (jsonData, fileName = 'data') => {
@@ -178,7 +193,6 @@ function App() {
           prompt: userPrompt,
           model: selectedModel,
           userEmail: user.email,
-          session_id: session.id.toString(),
         }),
       });
 
@@ -243,7 +257,6 @@ function App() {
       formData.append('file', file);
       formData.append('model', selectedModel);
       formData.append('userEmail', user.email);
-      formData.append('session_id', session.id.toString());
 
       const response = await fetch(`${BOT_API_URL}/generate`, {
         method: 'POST',
@@ -389,8 +402,10 @@ function App() {
   const isWithinLast7Days = (timestamp) => {
     const now = new Date();
     const sessionDate = new Date(timestamp);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999); // End of yesterday
+
+    // Session should be between 7 days ago and the end of yesterday
     return sessionDate >= sevenDaysAgo && sessionDate <= yesterdayEnd;
   };
 
@@ -408,7 +423,7 @@ function App() {
               src={logoSrc}
               alt="Logo"
               className="sidebar-logo"
-              onError={() => setLogoSrc('https://via.placeholder.com/44')}
+              onError={() => setLogoSrc('https://via.placeholder.com/40')}
             />
             <h1 className="brand-name">AI Chatbot</h1>
           </div>
@@ -516,6 +531,7 @@ function App() {
                   {currentSession.messages.map((msg, index) => {
                     const messageType = msg.type || (msg.text ? 'text' : 'unknown');
                     const messageData = msg.data || msg.text || '';
+                    const rawData = msg.raw || msg.text || '';
                     return (
                       <div
                         key={index}
@@ -544,9 +560,9 @@ function App() {
                             <div className="table-actions">
                               <button
                                 className="download-btn"
-                                onClick={() => downloadTableAsXLS(messageData, `table_${index}`)}
+                                onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
                               >
-                                Download Table (XLS)
+                                Download Table
                               </button>
                               <button
                                 className="json-view-btn"
@@ -592,10 +608,10 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <ReactMarkdown className="markdown-content">{messageData}</ReactMarkdown>
+                          <ReactMarkdown>{messageData}</ReactMarkdown>
                         )}
                         {msg.sender === 'user' && (
-                          <div className="message-actions">
+                          <div>
                             <button
                               onClick={() => handleEditPrompt(messageData, index)}
                               className="edit"
@@ -612,7 +628,7 @@ function App() {
               </div>
             ) : (
               <div className="welcome-message">
-                What can I help with today? Try typing a prompt or uploading a file (.txt, .docx, .pdf, or image).
+                What can I help with? Try typing a prompt or uploading a file (.txt, .docx, .pdf, or image).
               </div>
             )}
           </div>
@@ -621,7 +637,7 @@ function App() {
               type="file"
               ref={fileInputRef}
               style={{ display: 'none' }}
-              accept=".txt,.docx,.pdf,.png,.jpg,.jpeg"
+              accept=".txt,.docx,.pdf,image/*"
               onChange={handleFileUpload}
             />
             <button
@@ -666,7 +682,7 @@ function App() {
             </button>
           </form>
           <div className="disclaimer">
-            AI Chatbot can make mistakes. Please check important information.
+            AI Chatbot can make mistakes. Check important info.
           </div>
         </div>
       </div>
