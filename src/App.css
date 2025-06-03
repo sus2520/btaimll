@@ -1,6 +1,6 @@
 /* App.css */
 * {
-  box-sizing: border-box; /* Ensure padding and borders are included in width/height */
+  box-sizing: border-box;
 }
 
 .app {
@@ -10,29 +10,29 @@
   font-family: 'Segoe UI', 'Roboto', sans-serif;
   color: #333;
   background-color: #f8fafc;
-  overflow: hidden; /* Prevent page-level scrolling */
+  overflow: hidden;
 }
 
 .main-container {
   display: flex;
   flex: 1;
-  height: 100vh; /* Ensure full viewport height */
-  overflow: hidden; /* Prevent overflow issues */
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 234px; /* Fixed width */
+  width: 234px;
   background: linear-gradient(180deg, #1E3A8A, #2B4EAD);
   padding: 24px;
   border-right: 1px solid #60A5FA;
   color: #FFFFFF;
-  height: 100vh; /* Full viewport height */
-  position: fixed; /* Fix sidebar to viewport */
+  height: 100vh;
+  position: fixed;
   top: 0;
   left: 0;
   display: flex;
   flex-direction: column;
-  z-index: 100; /* Ensure sidebar is above chat content */
+  z-index: 100;
 }
 
 .brand-section {
@@ -59,7 +59,7 @@
 
 .conversations {
   flex: 1;
-  overflow-y: auto; /* Independent scrolling for conversations */
+  overflow-y: auto;
   padding-bottom: 24px;
 }
 
@@ -175,7 +175,7 @@
   display: flex;
   flex-direction: column;
   background-color: #FFFFFF;
-  margin-left: 282px; /* Adjusted: 234px (width) + 24px (left padding) + 24px (right padding) */
+  margin-left: 282px;
   height: 100vh;
 }
 
@@ -419,8 +419,8 @@
   background-color: #F8FAFC;
   z-index: 10;
   flex-shrink: 0;
-  width: 100%; /* Ensure it doesn't exceed chat-container */
-  box-sizing: border-box; /* Include padding in width */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .prompt-textarea {
@@ -473,7 +473,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
 }
 
 .attachment-btn:hover,
@@ -856,12 +856,12 @@
 /* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
-    width: 198px; /* 10% less than 220px */
+    width: 198px;
     padding: 20px;
   }
 
   .chat-container {
-    margin-left: 238px; /* 198px (width) + 20px (left padding) + 20px (right padding) */
+    margin-left: 238px;
   }
 
   .brand-name {
@@ -918,12 +918,12 @@
 
 @media (max-width: 480px) {
   .sidebar {
-    width: 162px; /* 10% less than 180px */
+    width: 162px;
     padding: 16px;
   }
 
   .chat-container {
-    margin-left: 194px; /* 162px (width) + 16px (left padding) + 16px (right padding) */
+    margin-left: 194px;
   }
 
   .brand-name {
