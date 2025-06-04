@@ -2,6 +2,7 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AuthContext } from './index';
+import * as XLSX from 'xlsx';
 import './App.css';
 
 const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
@@ -15,7 +16,9 @@ function App() {
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
-  const [editingMessageIndex, setEditingMessageIndex] = useState(null);
+  const [editingMessageIndex, setEditingMessageIndex] = useState(null); // For input section editing
+  const [editingInlineMessageIndex, setEditingInlineMessageIndex] = useState(null); // For inline editing
+  const [inlineEditText, setInlineEditText] = useState(''); // Text for inline editing
   const [showJsonView, setShowJsonView] = useState(null);
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
@@ -93,29 +96,13 @@ function App() {
     }
   };
 
-  const downloadTableAsCSV = (tableData, fileName = 'table') => {
+  const downloadTableAsExcel = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
-    const escapeCSV = (value) => {
-      if (typeof value !== 'string') return value;
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value;
-    };
-    const csvRows = [
-      headers.map(escapeCSV).join(','),
-      ...rows.map(row => row.map(escapeCSV).join(','))
-    ];
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${fileName}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
   };
 
   const downloadJson = (jsonData, fileName = 'data') => {
@@ -153,26 +140,33 @@ function App() {
     return newSession;
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (input.trim() === '') return;
+  const handleSendMessage = async (e, inlineIndex = null, inlineText = null) => {
+    if (e) e.preventDefault();
+    const userPrompt = inlineIndex !== null ? inlineText : input;
+    if (userPrompt.trim() === '') return;
 
     let session = currentSession;
     if (!session || session.messages.length === 0) {
-      session = startNewSession(input);
+      session = startNewSession(userPrompt);
     }
 
     let updatedSession;
-    if (editingMessageIndex !== null) {
+    let isEditing = inlineIndex !== null ? inlineIndex : editingMessageIndex;
+    if (isEditing !== null) {
       const updatedMessages = [...session.messages];
-      updatedMessages[editingMessageIndex] = { type: 'text', data: input, raw: input, sender: 'user' };
-      if (updatedMessages[editingMessageIndex + 1]?.sender === 'bot') {
-        updatedMessages.splice(editingMessageIndex + 1, 1);
+      updatedMessages[isEditing] = { type: 'text', data: userPrompt, raw: userPrompt, sender: 'user' };
+      if (updatedMessages[isEditing + 1]?.sender === 'bot') {
+        updatedMessages.splice(isEditing + 1, 1);
       }
       updatedSession = { ...session, messages: updatedMessages };
-      setEditingMessageIndex(null);
+      if (inlineIndex !== null) {
+        setEditingInlineMessageIndex(null);
+        setInlineEditText('');
+      } else {
+        setEditingMessageIndex(null);
+      }
     } else {
-      const newMessage = { type: 'text', data: input, raw: input, sender: 'user' };
+      const newMessage = { type: 'text', data: userPrompt, raw: userPrompt, sender: 'user' };
       updatedSession = {
         ...session,
         messages: [...session.messages, newMessage],
@@ -181,8 +175,7 @@ function App() {
 
     setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
     setCurrentSession(updatedSession);
-    const userPrompt = input;
-    setInput('');
+    if (inlineIndex === null) setInput('');
     setLoading(true);
 
     try {
@@ -364,9 +357,19 @@ function App() {
     setEditingMessageIndex(index);
   };
 
+  const handleInlineEditPrompt = (data, index) => {
+    setInlineEditText(data);
+    setEditingInlineMessageIndex(index);
+  };
+
   const handleCancelEdit = () => {
     setInput('');
     setEditingMessageIndex(null);
+  };
+
+  const handleCancelInlineEdit = () => {
+    setInlineEditText('');
+    setEditingInlineMessageIndex(null);
   };
 
   const handleUpdateSessionTitle = (sessionId, newTitle) => {
@@ -382,6 +385,8 @@ function App() {
   const handleSelectSession = (session) => {
     setCurrentSession(session);
     setEditingMessageIndex(null);
+    setEditingInlineMessageIndex(null);
+    setInlineEditText('');
   };
 
   const models = [
@@ -402,10 +407,8 @@ function App() {
   const isWithinLast7Days = (timestamp) => {
     const now = new Date();
     const sessionDate = new Date(timestamp);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
-    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999); // End of yesterday
-
-    // Session should be between 7 days ago and the end of yesterday
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
     return sessionDate >= sevenDaysAgo && sessionDate <= yesterdayEnd;
   };
 
@@ -560,9 +563,9 @@ function App() {
                             <div className="table-actions">
                               <button
                                 className="download-btn"
-                                onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
+                                onClick={() => downloadTableAsExcel(messageData, `table_${index}`)}
                               >
-                                Download Table
+                                Download Excel
                               </button>
                               <button
                                 className="json-view-btn"
@@ -607,16 +610,45 @@ function App() {
                               </button>
                             </div>
                           </div>
+                        ) : msg.sender === 'user' && editingInlineMessageIndex === index ? (
+                          <div className="inline-edit-container">
+                            <textarea
+                              value={inlineEditText}
+                              onChange={(e) => setInlineEditText(e.target.value)}
+                              className="inline-edit-textarea"
+                              rows="4"
+                            />
+                            <div className="inline-edit-actions">
+                              <button
+                                className="save-btn"
+                                onClick={() => handleSendMessage(null, index, inlineEditText)}
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="cancel-btn"
+                                onClick={handleCancelInlineEdit}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         ) : (
                           <ReactMarkdown>{messageData}</ReactMarkdown>
                         )}
                         {msg.sender === 'user' && (
-                          <div>
+                          <div className="message-actions">
                             <button
                               onClick={() => handleEditPrompt(messageData, index)}
                               className="edit"
                             >
-                              Edit
+                              Edit in Input
+                            </button>
+                            <button
+                              onClick={() => handleInlineEditPrompt(messageData, index)}
+                              className="edit"
+                            >
+                              Edit Inline
                             </button>
                           </div>
                         )}
