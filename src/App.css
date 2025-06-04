@@ -460,7 +460,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  line-height: 1.5; /* Explicitly set to match text rendering */
+  line-height: 1.5;
   background: #FFFFFF;
   color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -884,10 +884,12 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 16px 24px; /* Match input-container padding for visual consistency */
+  padding: 16px 24px; /* Match input-container padding */
   background-color: #f9f9f9;
   border-radius: 8px;
-  margin: 10px 0;
+  margin: 10px -20px; /* Negative margin to counteract .message padding */
+  max-width: none; /* Override .message max-width */
+  width: calc(100% + 40px); /* Extend to full width, accounting for .message padding */
 }
 
 /* Inline editing textarea */
@@ -903,10 +905,11 @@
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  line-height: 1.5; /* Match prompt-textarea for consistent text rendering */
+  line-height: 1.5;
   background: #FFFFFF;
   color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
 }
 
 .inline-edit-textarea:focus {
@@ -1033,6 +1036,11 @@
     padding: 24px;
     max-width: 360px;
   }
+
+  .inline-edit-container {
+    margin: 10px -16px; /* Adjust for smaller .message padding */
+    width: calc(100% + 32px); /* Adjust for smaller .message padding */
+  }
 }
 
 @media (max-width: 480px) {
@@ -1137,5 +1145,10 @@
   .form-button {
     font-size: 15px;
     padding: 10px;
+  }
+
+  .inline-edit-container {
+    margin: 10px -16px; /* Adjust for smaller .message padding */
+    width: calc(100% + 32px); /* Adjust for smaller .message padding */
   }
 }
