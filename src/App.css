@@ -1039,7 +1039,7 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 18px; /* Larger font size for readability */
-  resize: vertical; /* Allow vertical resizing */
+  resize: none; /* Allow vertical resizing */
   box-sizing: border-box;
   font-family: inherit; /* Match the app's font */
   line-height: 1.5; /* Better line spacing */
@@ -1089,7 +1089,7 @@
 
 /* Edit buttons in message-actions */
 .message-actions .edit {
-  padding: 5px 10px;
+  padding: 5px 100px;
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: #fff;
