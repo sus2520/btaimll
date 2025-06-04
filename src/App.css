@@ -355,6 +355,7 @@
   position: relative;
   font-size: 15px;
   line-height: 1.5;
+  box-sizing: border-box; /* Ensure padding is included in width */
 }
 
 .message.user {
@@ -604,7 +605,8 @@
 }
 
 .table-container::-webkit-scrollbar-thumb {
-  background-color: #D1D5DB;
+  background-color: New Chat
+#D1D5DB;
   border-radius: 4px;
   transition: background-color 0.3s ease;
 }
@@ -887,9 +889,10 @@
   padding: 16px 24px; /* Match input-container padding */
   background-color: #f9f9f9;
   border-radius: 8px;
-  margin: 10px -20px; /* Negative margin to counteract .message padding */
+  margin: 10px 0; /* Remove negative margins, let it naturally fit within parent */
   max-width: none; /* Override .message max-width */
-  width: calc(100% + 40px); /* Extend to full width, accounting for .message padding */
+  width: 100%; /* Take full available width within .message */
+  box-sizing: border-box; /* Ensure padding is included in width */
 }
 
 /* Inline editing textarea */
@@ -999,15 +1002,21 @@
   }
 
   .message {
+    padding: 16px;
     max-width: 80%;
     font-size: 14px;
+  }
+
+  .inline-edit-container {
+    padding: 12px 16px; /* Match reduced message padding */
+    margin: 10px 0;
+    width: 100%;
   }
 
   .input-container {
     padding: 12px 16px;
     gap: 8px;
-  }
-
+missed here
   .prompt-textarea {
     padding: 10px 12px;
     font-size: 14px;
@@ -1035,11 +1044,6 @@
   .form-card {
     padding: 24px;
     max-width: 360px;
-  }
-
-  .inline-edit-container {
-    margin: 10px -16px; /* Adjust for smaller .message padding */
-    width: calc(100% + 32px); /* Adjust for smaller .message padding */
   }
 }
 
@@ -1089,6 +1093,12 @@
     padding: 12px 16px;
     max-width: 85%;
     font-size: 13px;
+  }
+
+  .inline-edit-container {
+    padding: 10px 12px; /* Match reduced message padding */
+    margin: 10px 0;
+    width: 100%;
   }
 
   .input-container {
@@ -1145,10 +1155,5 @@
   .form-button {
     font-size: 15px;
     padding: 10px;
-  }
-
-  .inline-edit-container {
-    margin: 10px -16px; /* Adjust for smaller .message padding */
-    width: calc(100% + 32px); /* Adjust for smaller .message padding */
   }
 }
