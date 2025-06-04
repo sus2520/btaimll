@@ -193,6 +193,7 @@
 .version-selector {
   display: flex;
   align-items: center;
+  padding: 10px;
 }
 
 .version-dropdown {
@@ -204,12 +205,36 @@
   background-color: #FFFFFF;
   cursor: pointer;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 200px;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%208.2%205.4%2012.9%205.4s9.3-1.8%2012.9-5.4L287%2095.1c3.6-3.6%205.4-8.2%205.4-12.9z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+.version-dropdown option[value="basic"] {
+  background-color: navy;
+  color: white;
+}
+
+.version-dropdown option[value="ultra"] {
+  background-color: orange;
+  color: black;
+}
+
+.version-dropdown:hover {
+  border-color: #888;
 }
 
 .version-dropdown:focus {
   outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+  border-color: #666;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.version-dropdown option {
+  padding: 8px;
 }
 
 .share-btn {
@@ -435,6 +460,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
+  line-height: 1.5; /* Explicitly set to match text rendering */
   background: #FFFFFF;
   color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -853,6 +879,99 @@
   text-decoration: underline;
 }
 
+/* Inline editing container */
+.inline-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 16px 24px; /* Match input-container padding for visual consistency */
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+/* Inline editing textarea */
+.inline-edit-textarea {
+  width: 100%;
+  height: 100px;
+  max-height: 100px;
+  min-height: 100px;
+  resize: none;
+  overflow-y: auto;
+  padding: 12px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5; /* Match prompt-textarea for consistent text rendering */
+  background: #FFFFFF;
+  color: #1F2937;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.inline-edit-textarea:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+/* Inline editing actions (buttons) */
+.inline-edit-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end; /* Align buttons to the right */
+}
+
+/* Message actions (Edit in Input, Edit Inline) */
+.message-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Save and Cancel buttons */
+.save-btn, .cancel-btn {
+  padding: 8px 20px; /* Larger buttons for better clickability */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.save-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #45a049;
+}
+
+.cancel-btn:hover {
+  background-color: #da190b;
+}
+
+/* Edit buttons in message-actions */
+.message-actions .edit {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.message-actions .edit:hover {
+  background-color: #f0f0f0;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
@@ -1019,89 +1138,4 @@
     font-size: 15px;
     padding: 10px;
   }
-}
-/* Inline editing container */
-.inline-edit-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  margin: 10px 0;
-}
-
-/* Inline editing textarea */
-/* Inline editing textarea - Updated to match prompt-textarea size */
-.inline-edit-textarea {
-  width: 100%;
-  height: 100px;
-  max-height: 100px;
-  min-height: 100px;
-  resize: none;
-  overflow-y: auto;
-  padding: 12px 16px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  background: #FFFFFF;
-  color: #1F2937;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.inline-edit-textarea:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
-}
-
-/* Message actions (Edit in Input, Edit Inline) */
-.message-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-/* Save and Cancel buttons */
-.save-btn, .cancel-btn {
-  padding: 8px 20px; /* Larger buttons for better clickability */
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
-}
-
-.save-btn {
-  background-color: #4caf50;
-  color: white;
-}
-
-.cancel-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.save-btn:hover {
-  background-color: #45a049;
-}
-
-.cancel-btn:hover {
-  background-color: #da190b;
-}
-
-/* Edit buttons in message-actions */
-.message-actions .edit {
-  padding: 5px 100px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease;
-}
-
-.message-actions .edit:hover {
-  background-color: #f0f0f0;
 }
