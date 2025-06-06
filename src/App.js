@@ -31,10 +31,11 @@ function MessageItem({
 
   useEffect(() => {
     if (isEditing && textareaRef.current && measureRef.current) {
+      const parentWidth = measureRef.current.parentElement.offsetWidth;
       const height = measureRef.current.offsetHeight;
-      const width = measureRef.current.offsetWidth;
+      const initialWidth = Math.min(Math.max(parentWidth * 0.9, 300), 600);
       textareaRef.current.style.height = `${Math.max(height, 60)}px`;
-      textareaRef.current.style.width = `${Math.max(width, 200)}px`; // Ensure minimum width
+      textareaRef.current.style.width = `${initialWidth}px`;
     }
   }, [isEditing]);
 
@@ -43,6 +44,9 @@ function MessageItem({
       const textarea = textareaRef.current;
       textarea.style.height = 'auto';
       textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+      textarea.style.width = 'auto';
+      const newWidth = Math.min(Math.max(textarea.scrollWidth, 300), 600);
+      textarea.style.width = `${newWidth}px`;
     }
   }, [isEditing, inlineEditingMessage?.content]);
 
@@ -54,14 +58,12 @@ function MessageItem({
     <div className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}>
       {isEditing ? (
         <div>
-          <div className={`measure-wrapper ${msg.sender}`}>
-            <div
-              ref={measureRef}
-              className={`message-measure ${msg.sender}`}
-              style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
-            >
-              {inlineEditingMessage.content}
-            </div>
+          <div
+            ref={measureRef}
+            className={`message-measure ${msg.sender}`}
+            style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
+          >
+            {inlineEditingMessage.content}
           </div>
           <textarea
             ref={textareaRef}
@@ -71,6 +73,9 @@ function MessageItem({
               const textarea = e.target;
               textarea.style.height = 'auto';
               textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+              textarea.style.width = 'auto';
+              const newWidth = Math.min(Math.max(textarea.scrollWidth, 300), 600);
+              textarea.style.width = `${newWidth}px`;
             }}
             className="inline-edit-textarea"
             autoFocus
