@@ -2,7 +2,6 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AuthContext } from './index';
-import * as XLSX from 'xlsx';
 import './App.css';
 
 const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
@@ -11,14 +10,11 @@ const BOT_API_URL = 'https://fullstack-bot.ngrok.app';
 function App() {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
-  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
-  const [editingMessageIndex, setEditingMessageIndex] = useState(null); // For input section editing
-  const [editingInlineMessageIndex, setEditingInlineMessageIndex] = useState(null); // For inline editing
-  const [inlineEditText, setInlineEditText] = useState(''); // Text for inline editing
+  const [inlineEditingMessage, setInlineEditingMessage] = useState(null); // { index, content }
   const [showJsonView, setShowJsonView] = useState(null);
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
@@ -96,13 +92,29 @@ function App() {
     }
   };
 
-  const downloadTableAsExcel = (tableData, fileName = 'table') => {
+  const downloadTableAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
-    const worksheetData = [headers, ...rows];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    const escapeCSV = (value) => {
+      if (typeof value !== 'string') return value;
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+    const csvRows = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ];
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${fileName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const downloadJson = (jsonData, fileName = 'data') => {
@@ -140,42 +152,25 @@ function App() {
     return newSession;
   };
 
-  const handleSendMessage = async (e, inlineIndex = null, inlineText = null) => {
-    if (e) e.preventDefault();
-    const userPrompt = inlineIndex !== null ? inlineText : input;
-    if (userPrompt.trim() === '') return;
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    const input = e.target.querySelector('textarea').value;
+    if (input.trim() === '') return;
 
     let session = currentSession;
     if (!session || session.messages.length === 0) {
-      session = startNewSession(userPrompt);
+      session = startNewSession(input);
     }
 
-    let updatedSession;
-    let isEditing = inlineIndex !== null ? inlineIndex : editingMessageIndex;
-    if (isEditing !== null) {
-      const updatedMessages = [...session.messages];
-      updatedMessages[isEditing] = { type: 'text', data: userPrompt, raw: userPrompt, sender: 'user' };
-      if (updatedMessages[isEditing + 1]?.sender === 'bot') {
-        updatedMessages.splice(isEditing + 1, 1);
-      }
-      updatedSession = { ...session, messages: updatedMessages };
-      if (inlineIndex !== null) {
-        setEditingInlineMessageIndex(null);
-        setInlineEditText('');
-      } else {
-        setEditingMessageIndex(null);
-      }
-    } else {
-      const newMessage = { type: 'text', data: userPrompt, raw: userPrompt, sender: 'user' };
-      updatedSession = {
-        ...session,
-        messages: [...session.messages, newMessage],
-      };
-    }
+    const newMessage = { type: 'text', data: input, raw: input, sender: 'user' };
+    const updatedSession = {
+      ...session,
+      messages: [...session.messages, newMessage],
+    };
 
     setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
     setCurrentSession(updatedSession);
-    if (inlineIndex === null) setInput('');
+    e.target.querySelector('textarea').value = '';
     setLoading(true);
 
     try {
@@ -183,7 +178,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: userPrompt,
+          prompt: input,
           model: selectedModel,
           userEmail: user.email,
         }),
@@ -319,12 +314,18 @@ function App() {
     recognition.start();
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setIsListening(false);
       let session = currentSession;
       if (!session || session.messages.length === 0) {
         session = startNewSession(transcript);
       }
+      const newMessage = { type: 'text', data: transcript, raw: transcript, sender: 'user' };
+      const updatedSession = {
+        ...session,
+        messages: [...session.messages, newMessage],
+      };
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
+      setCurrentSession(updatedSession);
+      setIsListening(false);
     };
     recognition.onerror = (event) => {
       const errorMessage = { type: 'text', data: `Voice input error: ${event.error}`, raw: `Voice input error: ${event.error}`, sender: 'bot', error: true };
@@ -353,23 +354,80 @@ function App() {
   };
 
   const handleEditPrompt = (data, index) => {
-    setInput(data);
-    setEditingMessageIndex(index);
+    setInlineEditingMessage({ index, content: data });
   };
 
-  const handleInlineEditPrompt = (data, index) => {
-    setInlineEditText(data);
-    setEditingInlineMessageIndex(index);
-  };
+  const handleSaveInlineEdit = async (sessionId, index, newContent) => {
+    if (!newContent.trim()) {
+      setInlineEditingMessage(null);
+      return;
+    }
 
-  const handleCancelEdit = () => {
-    setInput('');
-    setEditingMessageIndex(null);
+    const session = chatSessions.find((s) => s.id === sessionId);
+    const updatedMessages = [...session.messages];
+    updatedMessages[index] = { ...updatedMessages[index], data: newContent, raw: newContent };
+
+    if (updatedMessages[index + 1]?.sender === 'bot') {
+      updatedMessages.splice(index + 1, 1);
+    }
+
+    const updatedSession = { ...session, messages: updatedMessages };
+    setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
+    setCurrentSession(updatedSession);
+    setInlineEditingMessage(null);
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${BOT_API_URL}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: newContent,
+          model: selectedModel,
+          userEmail: user.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bot backend error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.status !== 'success') {
+        throw new Error(data.error || 'Failed to generate response');
+      }
+
+      let botMessage;
+      const tableData = parseTableFromText(data.response);
+      if (tableData) {
+        botMessage = { type: 'table', data: tableData, raw: data.response, sender: 'bot' };
+      } else if (isJsonString(data.response)) {
+        botMessage = { type: 'json', data: JSON.parse(data.response), raw: data.response, sender: 'bot' };
+      } else {
+        botMessage = { type: 'text', data: data.response, raw: data.response, sender: 'bot' };
+      }
+
+      const updatedSessionWithBot = {
+        ...updatedSession,
+        messages: [...updatedMessages, botMessage],
+      };
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithBot : s)));
+      setCurrentSession(updatedSessionWithBot);
+    } catch (error) {
+      const errorMessage = { type: 'text', data: `Error: ${error.message}`, raw: error.message, sender: 'bot', error: true };
+      const updatedSessionWithError = {
+        ...updatedSession,
+        messages: [...updatedMessages, errorMessage],
+      };
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
+      setCurrentSession(updatedSessionWithError);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelInlineEdit = () => {
-    setInlineEditText('');
-    setEditingInlineMessageIndex(null);
+    setInlineEditingMessage(null);
   };
 
   const handleUpdateSessionTitle = (sessionId, newTitle) => {
@@ -384,9 +442,7 @@ function App() {
 
   const handleSelectSession = (session) => {
     setCurrentSession(session);
-    setEditingMessageIndex(null);
-    setEditingInlineMessageIndex(null);
-    setInlineEditText('');
+    setInlineEditingMessage(null);
   };
 
   const models = [
@@ -535,12 +591,39 @@ function App() {
                     const messageType = msg.type || (msg.text ? 'text' : 'unknown');
                     const messageData = msg.data || msg.text || '';
                     const rawData = msg.raw || msg.text || '';
+                    const isEditing = inlineEditingMessage && inlineEditingMessage.index === index;
+
                     return (
                       <div
                         key={index}
                         className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}
                       >
-                        {messageType === 'table' && messageData.headers && messageData.rows ? (
+                        {isEditing ? (
+                          <div>
+                            <textarea
+                              value={inlineEditingMessage.content}
+                              onChange={(e) => setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value })}
+                              className="inline-edit-textarea"
+                              rows="4"
+                              autoFocus
+                            />
+                            <div className="inline-edit-actions">
+                              <button
+                                onClick={() => handleSaveInlineEdit(currentSession.id, index, inlineEditingMessage.content)}
+                                className="save-btn"
+                                disabled={loading}
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelInlineEdit}
+                                className="cancel-btn"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : messageType === 'table' && messageData.headers && messageData.rows ? (
                           <div className="table-container">
                             <table className="response-table">
                               <thead>
@@ -563,9 +646,9 @@ function App() {
                             <div className="table-actions">
                               <button
                                 className="download-btn"
-                                onClick={() => downloadTableAsExcel(messageData, `table_${index}`)}
+                                onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
                               >
-                                Download Excel
+                                Download Table
                               </button>
                               <button
                                 className="json-view-btn"
@@ -610,45 +693,16 @@ function App() {
                               </button>
                             </div>
                           </div>
-                        ) : msg.sender === 'user' && editingInlineMessageIndex === index ? (
-                          <div className="inline-edit-container">
-                            <textarea
-                              value={inlineEditText}
-                              onChange={(e) => setInlineEditText(e.target.value)}
-                              className="inline-edit-textarea"
-                              rows="4"
-                            />
-                            <div className="inline-edit-actions">
-                              <button
-                                className="save-btn"
-                                onClick={() => handleSendMessage(null, index, inlineEditText)}
-                              >
-                                Save
-                              </button>
-                              <button
-                                className="cancel-btn"
-                                onClick={handleCancelInlineEdit}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
                         ) : (
                           <ReactMarkdown>{messageData}</ReactMarkdown>
                         )}
-                        {msg.sender === 'user' && (
-                          <div className="message-actions">
+                        {msg.sender === 'user' && !isEditing && (
+                          <div>
                             <button
                               onClick={() => handleEditPrompt(messageData, index)}
                               className="edit"
                             >
-                              Edit in Input
-                            </button>
-                            <button
-                              onClick={() => handleInlineEditPrompt(messageData, index)}
-                              className="edit"
-                            >
-                              Edit Inline
+                              Edit
                             </button>
                           </div>
                         )}
@@ -685,18 +739,11 @@ function App() {
               />
             </button>
             <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={editingMessageIndex !== null ? "Edit your message..." : "Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."}
+              placeholder="Type a prompt or upload a file (.txt, .docx, .pdf, or image)..."
               disabled={loading}
               className="prompt-textarea"
               rows="4"
             />
-            {editingMessageIndex !== null && (
-              <button type="button" className="cancel-btn" onClick={handleCancelEdit}>
-                Cancel
-              </button>
-            )}
             <button
               type="button"
               className={`voice-btn ${isListening ? 'listening' : ''}`}
@@ -710,7 +757,7 @@ function App() {
               />
             </button>
             <button type="submit" className="send-btn" disabled={loading}>
-              {loading ? 'Generating...' : editingMessageIndex !== null ? 'Update' : 'Send'}
+              {loading ? 'Generating...' : 'Send'}
             </button>
           </form>
           <div className="disclaimer">

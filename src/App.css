@@ -192,7 +192,6 @@
 .version-selector {
   display: flex;
   align-items: center;
-  padding: 10px;
 }
 
 .version-dropdown {
@@ -204,36 +203,12 @@
   background-color: #FFFFFF;
   cursor: pointer;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  width: 200px;
-  appearance: none;
-  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%വ%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%208.2%205.4%2012.9%205.4s9.3-1.8%2012.9-5.4L287%2095.1c3.6-3.6%205.4-8.2%205.4-12.9z%22%2F%3E%3C%2Fsvg%3E');
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
-}
-
-.version-dropdown option[value="basic"] {
-  background-color: navy;
-  color: white;
-}
-
-.version-dropdown option[value="ultra"] {
-  background-color: orange;
-  color: black;
-}
-
-.version-dropdown:hover {
-  border-color: #888;
 }
 
 .version-dropdown:focus {
   outline: none;
-  border-color: #666;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-}
-
-.version-dropdown option {
-  padding: 8px;
+  border-color: #3B82F6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
 }
 
 .share-btn {
@@ -354,7 +329,6 @@
   position: relative;
   font-size: 15px;
   line-height: 1.5;
-  box-sizing: border-box;
 }
 
 .message.user {
@@ -460,7 +434,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  line-height: 1.5;
   background: #FFFFFF;
   color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -585,7 +558,32 @@
   border-top: 1px solid #E5E7EB;
   background-color: #F8FAFC;
   flex-shrink: 0;
-量: 10px;
+}
+
+.table-container {
+  position: relative;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #D1D5DB #FFFFFF;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #FFFFFF;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #D1D5DB;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #9CA3AF;
 }
 
 .response-table {
@@ -743,6 +741,55 @@
   outline: none;
 }
 
+.inline-edit-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #FFFFFF;
+  color: #1F2937;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.inline-edit-textarea:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background-color: #3B82F6;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.save-btn:hover,
+.save-btn:focus {
+  background-color: #2563EB;
+  transform: scale(1.02);
+  outline: none;
+}
+
+.save-btn:disabled {
+  background-color: #D1D5DB;
+  cursor: not-allowed;
+}
+
 .login-container,
 .signup-container {
   min-height: 100vh;
@@ -854,109 +901,6 @@
   text-decoration: underline;
 }
 
-/* Inline editing container */
-.inline-edit-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 12px 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  margin: 10px 0;
-  max-width: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Ensure the container isn't constrained by the parent .message max-width */
-.message .inline-edit-container {
-  max-width: 100%;
-  width: 100%;
-}
-
-/* Inline editing textarea */
-.inline-edit-textarea {
-  width: 100%;
-  height: 100px;
-  max-height: 100px;
-  min-height: 100px;
-  resize: none;
-  overflow-y: auto;
-  padding: 12px 16px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  line-height: 1.5;
-  background: #FFFFFF;
-  color: #1F2937;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-sizing: border-box;
-}
-
-.inline-edit-textarea:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
-}
-
-/* Inline editing actions (buttons) */
-.inline-edit-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: flex-end;
-}
-
-/* Message actions (Edit in Input, Edit Inline) */
-.message-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-/* Save and Cancel buttons */
-.save-btn, .cancel-btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
-}
-
-.save-btn {
-  background-color: #4caf50;
-  color: white;
-}
-
-.cancel-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.save-btn:hover {
-  background-color: #45a049;
-}
-
-.cancel-btn:hover {
-  background-color: #da190b;
-}
-
-/* Edit buttons in message-actions */
-.message-actions .edit {
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease;
-}
-
-.message-actions .edit:hover {
-  background-color: #f0f0f0;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
@@ -981,24 +925,7 @@
   }
 
   .message {
-    padding: 16px;
     max-width: 80%;
-    font-size: 14px;
-  }
-
-  /* When a message contains an inline edit container, allow it to take more space */
-  .message:has(.inline-edit-container) {
-    max-width: 100%;
-  }
-
-  .inline-edit-container {
-    padding: 10px 12px;
-    margin: 10px 0;
-    width: 100%;
-  }
-
-  .inline-edit-textarea {
-    padding: 10px 12px;
     font-size: 14px;
   }
 
@@ -1082,22 +1009,6 @@
   .message {
     padding: 12px 16px;
     max-width: 85%;
-    font-size: 13px;
-  }
-
-  /* When a message contains an inline edit container, allow it to take more space */
-  .message:has(.inline-edit-container) {
-    max-width: 100%;
-  }
-
-  .inline-edit-container {
-    padding: 8px 10px;
-    margin: 10px 0;
-    width: 100%;
-  }
-
-  .inline-edit-textarea {
-    padding: 8px 10px;
     font-size: 13px;
   }
 
