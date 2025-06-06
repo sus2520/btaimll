@@ -290,7 +290,7 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  const convertTableToJson = (tableData) => {
+  const convertTableToJson = ( burialData) => {
     const { headers, rows } = tableData;
     return rows.map(row => 
       headers.reduce((obj, header, index) => {
@@ -318,8 +318,16 @@ function App() {
     if (input.trim() === '') return;
 
     let session = currentSession;
-    if (!session || session.messages.length === 0) {
+    if (!session) {
       session = startNewSession(input);
+    } else {
+      // Update the session title based on the first message if it's still "Untitled Chat"
+      if (session.messages.length === 0 && session.title.startsWith('Untitled Chat')) {
+        const newTitle = input.length > 30 ? input.slice(0, 27) + '...' : input;
+        session = { ...session, title: newTitle };
+        setChatSessions((prev) => prev.map((s) => (s.id === session.id ? session : s)));
+        setCurrentSession(session);
+      }
     }
 
     const newMessage = { type: 'text', data: input, raw: input, sender: 'user' };
