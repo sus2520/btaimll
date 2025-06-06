@@ -34,7 +34,7 @@ function MessageItem({
       const height = measureRef.current.offsetHeight;
       const width = measureRef.current.offsetWidth;
       textareaRef.current.style.height = `${Math.max(height, 60)}px`;
-      textareaRef.current.style.width = `${width}px`;
+      textareaRef.current.style.width = `${Math.max(width, 200)}px`; // Ensure minimum width
     }
   }, [isEditing]);
 
@@ -56,7 +56,7 @@ function MessageItem({
         <div>
           <div
             ref={measureRef}
-            className="message-measure"
+            className={`message-measure ${msg.sender}`}
             style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
           >
             {inlineEditingMessage.content}
