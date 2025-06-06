@@ -54,12 +54,14 @@ function MessageItem({
     <div className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}>
       {isEditing ? (
         <div>
-          <div
-            ref={measureRef}
-            className={`message-measure ${msg.sender}`}
-            style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
-          >
-            {inlineEditingMessage.content}
+          <div className={`measure-wrapper ${msg.sender}`}>
+            <div
+              ref={measureRef}
+              className={`message-measure ${msg.sender}`}
+              style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
+            >
+              {inlineEditingMessage.content}
+            </div>
           </div>
           <textarea
             ref={textareaRef}
@@ -290,7 +292,7 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  const convertTableToJson = ( burialData) => {
+  const convertTableToJson = (tableData) => {
     const { headers, rows } = tableData;
     return rows.map(row => 
       headers.reduce((obj, header, index) => {
@@ -321,7 +323,6 @@ function App() {
     if (!session) {
       session = startNewSession(input);
     } else {
-      // Update the session title based on the first message if it's still "Untitled Chat"
       if (session.messages.length === 0 && session.title.startsWith('Untitled Chat')) {
         const newTitle = input.length > 30 ? input.slice(0, 27) + '...' : input;
         session = { ...session, title: newTitle };
@@ -395,7 +396,7 @@ function App() {
     if (!file) return;
 
     let session = currentSession;
-    if (!session || session.messages.length === 0) {
+    if (!session) {
       session = startNewSession(`Uploaded: ${file.name}`);
     }
 
@@ -462,7 +463,7 @@ function App() {
     if (!recognition) {
       const errorMessage = { type: 'text', data: 'Voice input not supported.', raw: 'Voice input not supported.', sender: 'bot', error: true };
       let session = currentSession;
-      if (!session || session.messages.length === 0) {
+      if (!session) {
         session = startNewSession('Voice Input Error');
       }
       const updatedSession = {
@@ -483,7 +484,7 @@ function App() {
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       let session = currentSession;
-      if (!session || session.messages.length === 0) {
+      if (!session) {
         session = startNewSession(transcript);
       }
       const newMessage = { type: 'text', data: transcript, raw: transcript, sender: 'user' };
@@ -498,7 +499,7 @@ function App() {
     recognition.onerror = (event) => {
       const errorMessage = { type: 'text', data: `Voice input error: ${event.error}`, raw: `Voice input error: ${event.error}`, sender: 'bot', error: true };
       let session = currentSession;
-      if (!session || session.messages.length === 0) {
+      if (!session) {
         session = startNewSession('Voice Input Error');
       }
       const updatedSession = {
