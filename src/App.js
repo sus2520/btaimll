@@ -152,7 +152,7 @@ function App() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const input = e.target.querySelector('textarea').value;
-    if (!input.trim()) return;
+    if (input.trim() === '') return;
 
     let session = currentSession;
     if (!session || session.messages.length === 0) {
@@ -595,7 +595,7 @@ function App() {
                     useEffect(() => {
                       if (isEditing && textareaRef.current && measureRef.current) {
                         const height = measureRef.current.offsetHeight;
-                        textareaRef.current.style.height = `${Math.max(height, 60)}px`; // Minimum height of 60px
+                        textareaRef.current.style.height = `${Math.max(height, 60)}px`;
                       }
                     }, [isEditing]);
 
