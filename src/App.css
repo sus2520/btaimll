@@ -1,3 +1,4 @@
+css
 * {
   box-sizing: border-box;
 }
@@ -389,26 +390,11 @@
 
 .message-measure {
   padding: 16px 20px;
-  border-radius: 10px;
   font-size: 15px;
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-  max-width: 75%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  display: inline-block; /* Ensure it respects content width like .message */
-}
-
-.message-measure.user {
-  background-color: #DBEAFE;
-  align-self: flex-end;
-  margin-left: auto;
-  width: fit-content;
-}
-
-.message-measure.bot {
-  background-color: #F1F5F9;
-  align-self: flex-start;
+  width: 100%;
 }
 
 .loading {
@@ -767,6 +753,8 @@
 }
 
 .inline-edit-textarea {
+  width: 100%;
+  min-width: 100%;
   padding: 16px 20px;
   border: 1px solid #D1D5DB;
   border-radius: 10px;
@@ -959,7 +947,6 @@
   }
 
   .message-measure {
-    max-width: 80%;
     padding: 12px 16px;
     font-size: 14px;
   }
@@ -1053,7 +1040,6 @@
   }
 
   .message-measure {
-    max-width: 85%;
     padding: 12px 16px;
     font-size: 13px;
   }

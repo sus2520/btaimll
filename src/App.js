@@ -31,11 +31,9 @@ function MessageItem({
 
   useEffect(() => {
     if (isEditing && textareaRef.current && measureRef.current) {
-      const parentWidth = measureRef.current.parentElement.offsetWidth;
       const height = measureRef.current.offsetHeight;
-      const initialWidth = Math.min(Math.max(parentWidth * 0.9, 300), 600);
       textareaRef.current.style.height = `${Math.max(height, 60)}px`;
-      textareaRef.current.style.width = `${initialWidth}px`;
+      textareaRef.current.style.width = `600px`;
     }
   }, [isEditing]);
 
@@ -44,9 +42,7 @@ function MessageItem({
       const textarea = textareaRef.current;
       textarea.style.height = 'auto';
       textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-      textarea.style.width = 'auto';
-      const newWidth = Math.min(Math.max(textarea.scrollWidth, 300), 600);
-      textarea.style.width = `${newWidth}px`;
+      textarea.style.width = `600px`;
     }
   }, [isEditing, inlineEditingMessage?.content]);
 
@@ -73,9 +69,7 @@ function MessageItem({
               const textarea = e.target;
               textarea.style.height = 'auto';
               textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-              textarea.style.width = 'auto';
-              const newWidth = Math.min(Math.max(textarea.scrollWidth, 300), 600);
-              textarea.style.width = `${newWidth}px`;
+              textarea.style.width = `600px`;
             }}
             className="inline-edit-textarea"
             autoFocus
