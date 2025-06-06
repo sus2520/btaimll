@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
-const API_URL = 'https://login-1-8dx3.onrender.com';
+const API_URL = 'https://fullstack-bot.ngrok.app';
 
 const Login = () => {
   const [email, setEmail] = useState('');

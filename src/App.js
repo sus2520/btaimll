@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { AuthContext } from './index';
 import './App.css';
 
-const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
+
 const BOT_API_URL = 'https://fullstack-bot.ngrok.app';
 
 function MessageItem({
