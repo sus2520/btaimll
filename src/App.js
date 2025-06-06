@@ -33,16 +33,18 @@ function MessageItem({
     if (isEditing && textareaRef.current && measureRef.current) {
       const height = measureRef.current.offsetHeight;
       textareaRef.current.style.height = `${Math.max(height, 60)}px`;
-      textareaRef.current.style.width = `600px`;
+      textareaRef.current.style.width = `900px`; // Fixed width to 900px
     }
   }, [isEditing]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       const textarea = textareaRef.current;
+      // Adjust height dynamically
       textarea.style.height = 'auto';
       textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-      textarea.style.width = `600px`;
+      // Keep width fixed at 900px
+      textarea.style.width = `900px`;
     }
   }, [isEditing, inlineEditingMessage?.content]);
 
@@ -67,9 +69,11 @@ function MessageItem({
             onChange={(e) => {
               setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value });
               const textarea = e.target;
+              // Adjust height as user types
               textarea.style.height = 'auto';
               textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-              textarea.style.width = `600px`;
+              // Keep width fixed at 900px
+              textarea.style.width = `900px`;
             }}
             className="inline-edit-textarea"
             autoFocus
@@ -792,10 +796,9 @@ function App() {
               onClick={() => fileInputRef.current.click()}
             >
               <img
-                src="/attach-icon.png"
+                src="/attach-icon/"
                 alt="Attach"
                 className="attachment-icon"
-                onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
               />
             </button>
             <textarea
@@ -812,7 +815,7 @@ function App() {
               <img
                 src="/voice-icon.png"
                 alt="Voice"
-                className="voice-icon"
+                className=""
                 onError={(e) => (e.target.src = 'https://via.placeholder.com/24')}
               />
             </button>
