@@ -32,7 +32,9 @@ function MessageItem({
   useEffect(() => {
     if (isEditing && textareaRef.current && measureRef.current) {
       const height = measureRef.current.offsetHeight;
+      const width = measureRef.current.offsetWidth;
       textareaRef.current.style.height = `${Math.max(height, 60)}px`;
+      textareaRef.current.style.width = `${width}px`;
     }
   }, [isEditing]);
 
@@ -171,7 +173,7 @@ function MessageItem({
 function App() {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
-  const [loading, setLoading] = useState(false); // Fixed initial value to false as per context
+  const [loading, setLoading] = useState(false);
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
@@ -517,7 +519,7 @@ function App() {
       return;
     }
 
-    const session = chatSessions.find((s) => s.id === sessionId); // Fixed findBy to find
+    const session = chatSessions.find((s) => s.id === sessionId);
     const updatedMessages = [...session.messages];
     updatedMessages[index] = { ...updatedMessages[index], data: newContent, raw: newContent };
 
