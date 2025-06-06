@@ -14,13 +14,12 @@ function App() {
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
-  const [inlineEditingMessage, setInlineEditingMessage] = useState(null); // { index, content }
+  const [inlineEditingMessage, setInlineEditingMessage] = useState(null);
   const [showJsonView, setShowJsonView] = useState(null);
   const fileInputRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Load chat sessions from localStorage on mount
   useEffect(() => {
     const savedSessions = localStorage.getItem('chatSessions');
     if (savedSessions) {
@@ -29,7 +28,6 @@ function App() {
     }
   }, []);
 
-  // Save chat sessions to localStorage whenever they change
   useEffect(() => {
     if (chatSessions.length > 0) {
       localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
@@ -38,7 +36,6 @@ function App() {
     }
   }, [chatSessions]);
 
-  // Auto-scroll to bottom of messages
   useEffect(() => {
     const messagesDiv = document.querySelector('.messages');
     if (messagesDiv) {
@@ -155,7 +152,7 @@ function App() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const input = e.target.querySelector('textarea').value;
-    if (input.trim() === '') return;
+    if (!input.trim()) return;
 
     let session = currentSession;
     if (!session || session.messages.length === 0) {
@@ -592,6 +589,23 @@ function App() {
                     const messageData = msg.data || msg.text || '';
                     const rawData = msg.raw || msg.text || '';
                     const isEditing = inlineEditingMessage && inlineEditingMessage.index === index;
+                    const textareaRef = useRef(null);
+                    const measureRef = useRef(null);
+
+                    useEffect(() => {
+                      if (isEditing && textareaRef.current && measureRef.current) {
+                        const height = measureRef.current.offsetHeight;
+                        textareaRef.current.style.height = `${Math.max(height, 60)}px`; // Minimum height of 60px
+                      }
+                    }, [isEditing]);
+
+                    useEffect(() => {
+                      if (isEditing && textareaRef.current) {
+                        const textarea = textareaRef.current;
+                        textarea.style.height = 'auto';
+                        textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+                      }
+                    }, [isEditing, inlineEditingMessage?.content]);
 
                     return (
                       <div
@@ -600,11 +614,23 @@ function App() {
                       >
                         {isEditing ? (
                           <div>
+                            <div
+                              ref={measureRef}
+                              className="message-measure"
+                              style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
+                            >
+                              {inlineEditingMessage.content}
+                            </div>
                             <textarea
+                              ref={textareaRef}
                               value={inlineEditingMessage.content}
-                              onChange={(e) => setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value })}
+                              onChange={(e) => {
+                                setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value });
+                                const textarea = e.target;
+                                textarea.style.height = 'auto';
+                                textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+                              }}
                               className="inline-edit-textarea"
-                              rows="4"
                               autoFocus
                             />
                             <div className="inline-edit-actions">

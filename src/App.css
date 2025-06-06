@@ -1,3 +1,4 @@
+css
 * {
   box-sizing: border-box;
 }
@@ -335,6 +336,7 @@
   background-color: #DBEAFE;
   align-self: flex-end;
   margin-left: auto;
+  width: fit-content;
 }
 
 .message.bot {
@@ -384,6 +386,15 @@
 .message pre table th {
   background-color: #F3F4F6;
   font-weight: 600;
+}
+
+.message-measure {
+  padding: 16px 20px;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
 }
 
 .loading {
@@ -743,15 +754,21 @@
 
 .inline-edit-textarea {
   width: 100%;
-  padding: 12px;
+  min-width: 100%;
+  padding: 16px 20px;
   border: 1px solid #D1D5DB;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 15px;
   font-family: inherit;
-  background: #FFFFFF;
+  background: #DBEAFE;
   color: #1F2937;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  resize: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
 }
 
 .inline-edit-textarea:focus {
@@ -901,7 +918,6 @@
   text-decoration: underline;
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
     width: 198px;
@@ -926,6 +942,17 @@
 
   .message {
     max-width: 80%;
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+
+  .message-measure {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .inline-edit-textarea {
+    padding: 12px 16px;
     font-size: 14px;
   }
 
@@ -1009,6 +1036,16 @@
   .message {
     padding: 12px 16px;
     max-width: 85%;
+    font-size: 13px;
+  }
+
+  .message-measure {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .inline-edit-textarea {
+    padding: 12px 16px;
     font-size: 13px;
   }
 
