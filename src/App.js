@@ -176,7 +176,7 @@ function App() {
   const [currentSession, setCurrentSession] = useState(null);
   const [loading, setLoading] = useState(false);
   const [logoSrc, setLogoSrc] = useState('/logo.png');
-  const [ cacao, setIsListening] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
   const [inlineEditingMessage, setInlineEditingMessage] = useState(null);
   const [showJsonView, setShowJsonView] = useState(null);
