@@ -123,27 +123,27 @@ function MessageItem({
               <div className="json-display">
                 <pre>{JSON.stringify(convertTableToJson(messageData), null, 2)}</pre>
               </div>
-              <div>
-            <div className="table-actions">
-              <button
-                className="download-btn"
-                onClick={() => downloadJson(convertTableToJson(messageData), `table_${index}`)}
-              >
-                Download JSON
-              </button>
-              <button
-                className="close-json-btn"
-                onClick={() => setShowJsonView(null)}
-              >
-                Close
-              </button>
+              <div className="table-actions">
+                <button
+                  className="download-btn"
+                  onClick={() => downloadJson(convertTableToJson(messageData), `table_${index}`)}
+                >
+                  Download JSON
+                </button>
+                <button
+                  className="close-json-btn"
+                  onClick={() => setShowJsonView(null)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           )}
         </div>
       ) : messageType === 'json' ? (
         <div className="json-container">
           <div className="json-display">
-            <pre>{JSON.stringify(messageData)}</pre>
+            <pre>{JSON.stringify(messageData, null, 2)}</pre>
           </div>
           <div className="table-actions">
             <button
@@ -171,7 +171,7 @@ function MessageItem({
 function App() {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Fixed initial value to false as per context
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
@@ -250,7 +250,7 @@ function App() {
     }
   };
 
-  const downloadTableToJsonAsCSV = (tableData, fileName = 'table') => {
+  const downloadTableAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
     const escapeCSV = (value) => {
       if (typeof value !== 'string') return value;
@@ -440,7 +440,7 @@ function App() {
         ...updatedSession,
         messages: [...updatedSession.messages, errorMessage],
       };
-      setChatSessions((prev)) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
       setCurrentSession(updatedSessionWithError);
     } finally {
       setLoading(false);
@@ -495,7 +495,7 @@ function App() {
         ...session,
         messages: [...session.messages, errorMessage],
       };
-      setChatSessions((prev)) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
+      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
       setCurrentSession(updatedSession);
       setIsListening(false);
     };
@@ -511,17 +511,13 @@ function App() {
     localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
   };
 
-  const handleEditPrompt = (data, index) => {
-    setInlineEditingMessage({ index, content: data });
-    };
-
   const handleSaveInlineEdit = async (sessionId, index, newContent) => {
     if (!newContent.trim()) {
       setInlineEditingMessage(null);
       return;
     }
 
-    const session = chatSessions.findBy((s) => s.id === sessionId);
+    const session = chatSessions.find((s) => s.id === sessionId); // Fixed findBy to find
     const updatedMessages = [...session.messages];
     updatedMessages[index] = { ...updatedMessages[index], data: newContent, raw: newContent };
 
