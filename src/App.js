@@ -7,10 +7,171 @@ import './App.css';
 const LOGIN_API_URL = 'https://login-1-8dx3.onrender.com';
 const BOT_API_URL = 'https://fullstack-bot.ngrok.app';
 
+function MessageItem({
+  msg,
+  index,
+  inlineEditingMessage,
+  setInlineEditingMessage,
+  handleSaveInlineEdit,
+  handleCancelInlineEdit,
+  currentSession,
+  loading,
+  setShowJsonView,
+  showJsonView,
+  downloadTableAsCSV,
+  downloadJson,
+  convertTableToJson,
+}) {
+  const messageType = msg.type || (msg.text ? 'text' : 'unknown');
+  const messageData = msg.data || msg.text || '';
+  const rawData = msg.raw || msg.text || '';
+  const isEditing = inlineEditingMessage && inlineEditingMessage.index === index;
+  const textareaRef = useRef(null);
+  const measureRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current && measureRef.current) {
+      const height = measureRef.current.offsetHeight;
+      textareaRef.current.style.height = `${Math.max(height, 60)}px`;
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+    }
+  }, [isEditing, inlineEditingMessage?.content]);
+
+  const handleEditPrompt = (data) => {
+    setInlineEditingMessage({ index, content: data });
+  };
+
+  return (
+    <div className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}>
+      {isEditing ? (
+        <div>
+          <div
+            ref={measureRef}
+            className="message-measure"
+            style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
+          >
+            {inlineEditingMessage.content}
+          </div>
+          <textarea
+            ref={textareaRef}
+            value={inlineEditingMessage.content}
+            onChange={(e) => {
+              setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value });
+              const textarea = e.target;
+              textarea.style.height = 'auto';
+              textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
+            }}
+            className="inline-edit-textarea"
+            autoFocus
+          />
+          <div className="inline-edit-actions">
+            <button
+              onClick={() => handleSaveInlineEdit(currentSession.id, index, inlineEditingMessage.content)}
+              className="save-btn"
+              disabled={loading}
+            >
+              Save
+            </button>
+            <button onClick={handleCancelInlineEdit} className="cancel-btn">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : messageType === 'table' && messageData.headers && messageData.rows ? (
+        <div className="table-container">
+          <table className="response-table">
+            <thead>
+              <tr>
+                {messageData.headers.map((header, idx) => (
+                  <th key={idx}>{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {messageData.rows.map((row, rowIdx) => (
+                <tr key={rowIdx}>
+                  {row.map((cell, cellIdx) => (
+                    <td key={cellIdx}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="table-actions">
+            <button
+              className="download-btn"
+              onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
+            >
+              Download Table
+            </button>
+            <button
+              className="json-view-btn"
+              onClick={() => setShowJsonView(showJsonView === index ? null : index)}
+            >
+              {showJsonView === index ? 'Hide JSON' : 'JSON View'}
+            </button>
+          </div>
+          {showJsonView === index && (
+            <div className="json-container">
+              <div className="json-display">
+                <pre>{JSON.stringify(convertTableToJson(messageData), null, 2)}</pre>
+              </div>
+              <div>
+            <div className="table-actions">
+              <button
+                className="download-btn"
+                onClick={() => downloadJson(convertTableToJson(messageData), `table_${index}`)}
+              >
+                Download JSON
+              </button>
+              <button
+                className="close-json-btn"
+                onClick={() => setShowJsonView(null)}
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      ) : messageType === 'json' ? (
+        <div className="json-container">
+          <div className="json-display">
+            <pre>{JSON.stringify(messageData)}</pre>
+          </div>
+          <div className="table-actions">
+            <button
+              className="download-btn"
+              onClick={() => downloadJson(messageData, `data_${index}`)}
+            >
+              Download JSON
+            </button>
+          </div>
+        </div>
+      ) : (
+        <ReactMarkdown>{messageData}</ReactMarkdown>
+      )}
+      {msg.sender === 'user' && !isEditing && (
+        <div>
+          <button onClick={() => handleEditPrompt(messageData)} className="edit">
+            Edit
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [logoSrc, setLogoSrc] = useState('/logo.png');
   const [isListening, setIsListening] = useState(false);
   const [selectedModel, setSelectedModel] = useState('basic');
@@ -89,7 +250,7 @@ function App() {
     }
   };
 
-  const downloadTableAsCSV = (tableData, fileName = 'table') => {
+  const downloadTableToJsonAsCSV = (tableData, fileName = 'table') => {
     const { headers, rows } = tableData;
     const escapeCSV = (value) => {
       if (typeof value !== 'string') return value;
@@ -279,7 +440,7 @@ function App() {
         ...updatedSession,
         messages: [...updatedSession.messages, errorMessage],
       };
-      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
+      setChatSessions((prev)) => prev.map((s) => (s.id === session.id ? updatedSessionWithError : s)));
       setCurrentSession(updatedSessionWithError);
     } finally {
       setLoading(false);
@@ -334,7 +495,7 @@ function App() {
         ...session,
         messages: [...session.messages, errorMessage],
       };
-      setChatSessions((prev) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
+      setChatSessions((prev)) => prev.map((s) => (s.id === session.id ? updatedSession : s)));
       setCurrentSession(updatedSession);
       setIsListening(false);
     };
@@ -352,7 +513,7 @@ function App() {
 
   const handleEditPrompt = (data, index) => {
     setInlineEditingMessage({ index, content: data });
-  };
+    };
 
   const handleSaveInlineEdit = async (sessionId, index, newContent) => {
     if (!newContent.trim()) {
@@ -360,7 +521,7 @@ function App() {
       return;
     }
 
-    const session = chatSessions.find((s) => s.id === sessionId);
+    const session = chatSessions.findBy((s) => s.id === sessionId);
     const updatedMessages = [...session.messages];
     updatedMessages[index] = { ...updatedMessages[index], data: newContent, raw: newContent };
 
@@ -584,157 +745,24 @@ function App() {
               <div className="chat-content">
                 <h2>{currentSession.title}</h2>
                 <div className="messages">
-                  {currentSession.messages.map((msg, index) => {
-                    const messageType = msg.type || (msg.text ? 'text' : 'unknown');
-                    const messageData = msg.data || msg.text || '';
-                    const rawData = msg.raw || msg.text || '';
-                    const isEditing = inlineEditingMessage && inlineEditingMessage.index === index;
-                    const textareaRef = useRef(null);
-                    const measureRef = useRef(null);
-
-                    useEffect(() => {
-                      if (isEditing && textareaRef.current && measureRef.current) {
-                        const height = measureRef.current.offsetHeight;
-                        textareaRef.current.style.height = `${Math.max(height, 60)}px`;
-                      }
-                    }, [isEditing]);
-
-                    useEffect(() => {
-                      if (isEditing && textareaRef.current) {
-                        const textarea = textareaRef.current;
-                        textarea.style.height = 'auto';
-                        textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-                      }
-                    }, [isEditing, inlineEditingMessage?.content]);
-
-                    return (
-                      <div
-                        key={index}
-                        className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}
-                      >
-                        {isEditing ? (
-                          <div>
-                            <div
-                              ref={measureRef}
-                              className="message-measure"
-                              style={{ visibility: 'hidden', position: 'absolute', whiteSpace: 'pre-wrap' }}
-                            >
-                              {inlineEditingMessage.content}
-                            </div>
-                            <textarea
-                              ref={textareaRef}
-                              value={inlineEditingMessage.content}
-                              onChange={(e) => {
-                                setInlineEditingMessage({ ...inlineEditingMessage, content: e.target.value });
-                                const textarea = e.target;
-                                textarea.style.height = 'auto';
-                                textarea.style.height = `${Math.max(textarea.scrollHeight, 60)}px`;
-                              }}
-                              className="inline-edit-textarea"
-                              autoFocus
-                            />
-                            <div className="inline-edit-actions">
-                              <button
-                                onClick={() => handleSaveInlineEdit(currentSession.id, index, inlineEditingMessage.content)}
-                                className="save-btn"
-                                disabled={loading}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelInlineEdit}
-                                className="cancel-btn"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : messageType === 'table' && messageData.headers && messageData.rows ? (
-                          <div className="table-container">
-                            <table className="response-table">
-                              <thead>
-                                <tr>
-                                  {messageData.headers.map((header, idx) => (
-                                    <th key={idx}>{header}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {messageData.rows.map((row, rowIdx) => (
-                                  <tr key={rowIdx}>
-                                    {row.map((cell, cellIdx) => (
-                                      <td key={cellIdx}>{cell}</td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                            <div className="table-actions">
-                              <button
-                                className="download-btn"
-                                onClick={() => downloadTableAsCSV(messageData, `table_${index}`)}
-                              >
-                                Download Table
-                              </button>
-                              <button
-                                className="json-view-btn"
-                                onClick={() => setShowJsonView(showJsonView === index ? null : index)}
-                              >
-                                {showJsonView === index ? 'Hide JSON' : 'JSON View'}
-                              </button>
-                            </div>
-                            {showJsonView === index && (
-                              <div className="json-container">
-                                <pre className="json-display">
-                                  {JSON.stringify(convertTableToJson(messageData), null, 2)}
-                                </pre>
-                                <div className="table-actions">
-                                  <button
-                                    className="download-btn"
-                                    onClick={() => downloadJson(convertTableToJson(messageData), `table_${index}`)}
-                                  >
-                                    Download JSON
-                                  </button>
-                                  <button
-                                    className="close-json-btn"
-                                    onClick={() => setShowJsonView(null)}
-                                  >
-                                    Close
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : messageType === 'json' ? (
-                          <div className="json-container">
-                            <pre className="json-display">
-                              {JSON.stringify(messageData, null, 2)}
-                            </pre>
-                            <div className="table-actions">
-                              <button
-                                className="download-btn"
-                                onClick={() => downloadJson(messageData, `data_${index}`)}
-                              >
-                                Download JSON
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <ReactMarkdown>{messageData}</ReactMarkdown>
-                        )}
-                        {msg.sender === 'user' && !isEditing && (
-                          <div>
-                            <button
-                              onClick={() => handleEditPrompt(messageData, index)}
-                              className="edit"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {currentSession.messages.map((msg, index) => (
+                    <MessageItem
+                      key={index}
+                      msg={msg}
+                      index={index}
+                      inlineEditingMessage={inlineEditingMessage}
+                      setInlineEditingMessage={setInlineEditingMessage}
+                      handleSaveInlineEdit={handleSaveInlineEdit}
+                      handleCancelInlineEdit={handleCancelInlineEdit}
+                      currentSession={currentSession}
+                      loading={loading}
+                      setShowJsonView={setShowJsonView}
+                      showJsonView={showJsonView}
+                      downloadTableAsCSV={downloadTableAsCSV}
+                      downloadJson={downloadJson}
+                      convertTableToJson={convertTableToJson}
+                    />
+                  ))}
                   {loading && <div className="loading">Loading...</div>}
                 </div>
               </div>
