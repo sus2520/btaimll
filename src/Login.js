@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './index';
 import './App.css';
 
@@ -85,12 +85,6 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <p className="form-link">
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
-        <p className="form-link">
-          Forgot your password? <Link to="/forgot-password">Reset it</Link>
-        </p>
       </div>
     </div>
   );
